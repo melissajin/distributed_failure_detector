@@ -138,6 +138,9 @@ func GetIdentity() (string, int) {
 	host, _ := os.Hostname()
 	re, _ := regexp.Compile("-[0-9]+.")
 	idStr := re.FindString(host)
+	if idStr != "" {
+		idStr = idStr[1:len(idStr)-1]
+	}
 	id, _ := strconv.Atoi(idStr)
 	return host, id
 }
