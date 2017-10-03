@@ -104,9 +104,14 @@ func (m *MembersList) Read() [] string{
 
 func (m *MembersList) Length() int {
 	m.mu.Lock()
-	len := len(m.Read())
+	var length int
+	if(m.head == nil) {
+		length = 0
+	} else {
+		length = len(m.Read())
+	}
 	m.mu.Unlock()
-	return len
+	return length
 }
 
 func (m *MembersList) Insert(id int, timestamp time.Time, hbCounter int) {

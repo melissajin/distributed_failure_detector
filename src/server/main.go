@@ -32,17 +32,22 @@ func main() {
 	for {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Command: ")
-		text, _ := reader.ReadString('\n')
+		command, _, _ := reader.ReadLine()
+		text := string(command)
+		//text, _ := reader.ReadString('\n')
 		if(strings.EqualFold(text, "join")) {
 			go Join() //TODO: might need to use thread
 		} else if(strings.EqualFold(text, "leave")) {
 			go Leave() //TODO: might need to use thread
 		} else if(strings.EqualFold(text, "list")) {
+			if(memberList.Length() == 0) {
+				fmt.Print("No members\n")
+				continue
+			}
 			fmt.Print(memberList.Read())
 		} else if(strings.EqualFold(text, "id")) {
-			host,_ := os.Hostname()
-			re, _ := regexp.Compile("-[0-9]+.")
-			idStr := re.FindString(host)
+			_, id := GetIdentity()
+			idStr := strconv.Itoa(id)
 			fmt.Print(idStr + "\n")
 		} else {
 			fmt.Println("Invalid Command")

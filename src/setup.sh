@@ -28,7 +28,7 @@ then
 
 	    COMMAND=$COMMAND"
 	    if [ ! -d \"$DIRECTORY\" ]; then
-	    	git clone https://gitlab.engr.illinois.edu/tkao4/CS425-MP2.git
+	    	git clone https://tkao4:Ilmjsm2696@gitlab.engr.illinois.edu/tkao4/CS425-MP2.git
 	    else
 	    	cd CS425-MP2/src
 	    	git pull https://tkao4:Ilmjsm2696@gitlab.engr.illinois.edu/tkao4/CS425-MP2.git
@@ -77,7 +77,7 @@ then
 	    COMMAND=$COMMAND" export GOPATH=\"$HOME/CS425-MP2\";"
 		COMMAND=$COMMAND" fuser -k 8000/tcp;"
 		COMMAND=$COMMAND" cd CS425-MP2/src;"
-		COMMAND=$COMMAND" rm grep_*;"
+		#COMMAND=$COMMAND" rm grep_*;"
 
 		ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $node "
 	            $COMMAND"
