@@ -27,6 +27,7 @@ const (
 )
 
 func main() {
+	memberList = NewMembershipList()
 	for {
 		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Command: ")
@@ -38,25 +39,28 @@ func main() {
 		} else if(strings.Contains(text, "leave")) {
 			go Leave() //TODO: might need to use thread
 		} else if(strings.Contains(text, "list")) {
-			list := memberList.Read()
-			if(len(list) == 0) {
+			if(memberList.Size() == 0){
 				fmt.Print("No members\n")
-				continue
 			} else {
-				fmt.Print(list)
+				list := memberList.Read()
+				fmt.Println(list)
 			}
 		} else if(strings.Contains(text, "id")) {
 			_, id := GetIdentity()
 			idStr := strconv.Itoa(id)
 			fmt.Print(idStr + "\n")
 		} else {
-			fmt.Println("Invalid Command")
+			fmt.Println("Invalid Command. Enter [join/leave/list/id]")
 		}
 	}
 }
 
 func Listen(port int, receiverHost string, receiverId string) {
-	addr := ":" + strconv.Itoa(port)
+	addr := receiverHost + ":" + strconv.Itoa(port)
+
+	// Don't start gossip until > 5 machines in the system
+	for memberList.Size() < 6 {}
+
 	ln, err := net.Listen("udp", addr)
 	if err != nil {
 		log.Fatal("Error when listening to port:", err)
@@ -67,15 +71,17 @@ func Listen(port int, receiverHost string, receiverId string) {
 		if(leave == true) {
 			break
 		}
+
 		select {
 		case <- time.After(detectionTime): // TODO: need to reset detectionTime when recieve hb
+			fmt.Println("FAILED")
 			//remove id from list
 			removeId, _ := strconv.Atoi(receiverId)
 
 			//heartbeat failure
 			hb := NewHeartbeat(id, memberList, FAILED)
 			for i := 0; i < connections; i++ {
-				receiverId := strconv.Itoa((id + i + 1) % len(memberList.Read()))
+				receiverId := strconv.Itoa((id + i + 1) % memberList.Size())
 				receiverAddr := strings.Replace(host, idStr, receiverId, -1)  + ":" + strconv.Itoa(8000)
 				SendOnce(hb, receiverAddr)
 			}
@@ -114,7 +120,7 @@ func Cleanup(id int) {
 func UpdateMembershipLists(receivedList MembersList) {
 	receivedNode := receivedList.GetHead()
 	count := 0
-	for count < len(receivedList.Read()) {
+	for count < receivedList.Size() {
 		//get node info from their membership list
 		receivedStatus := receivedNode.GetStatus()
 		receivedHbCount := receivedNode.GetHBCount()
@@ -164,6 +170,12 @@ func Gossip(port int, host string, id int) {
 		if(leave == true) {
 			break
 		}
+
+		// Don't start gossip until > 5 machines in the system
+		if(memberList.Size() < 6){
+			continue
+		}
+
 		//send heartbeat after certain duration
 		time.After(heartbeatInterval)
 
@@ -177,6 +189,7 @@ func Gossip(port int, host string, id int) {
 }
 
 func SendOnce(hb *Heartbeat, addr string) {
+	fmt.Printf("SENDONCE %x %s\n", hb, addr)
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		log.Fatal("Error connecting to server: ", err)
@@ -205,7 +218,6 @@ func Join() {
 
 		// Send entry heartbeat to entry machine
 		entryMachineAddr := strings.Replace(host, idStr, entryMachineIdStr, -1) + ":" + strconv.Itoa(8000)
-		fmt.Printf("entryMachineAddr %s", entryMachineAddr)
 		SendOnce(entryHB, entryMachineAddr)
 
 		//receive heartbeat from entry machine and update memberList
@@ -226,7 +238,7 @@ func Join() {
 
 	// start 2 threads for each connection, each listening to different port
 	for i := 0; i < connections; i++ {
-		receiverId := strconv.Itoa((id + i + 1) % len(memberList.Read()))
+		receiverId := strconv.Itoa((id + i + 1) % memberList.Size())
 		receiverHost := strings.Replace(host, idStr, receiverId, -1)
 		leave = false
 		go Listen(8000 + i, receiverHost, receiverId)
@@ -243,7 +255,7 @@ func Leave() {
 	// Send heartbeat to leave
 	hb := NewHeartbeat(id, memberList, LEAVE)
 	for i := 0; i < connections; i++ {
-		receiverId := strconv.Itoa((id + i + 1) % len(memberList.Read()))
+		receiverId := strconv.Itoa((id + i + 1) % memberList.Size())
 		receiverAddr := strings.Replace(host, idStr, receiverId, -1) + ":" + strconv.Itoa(8000)
 
 		SendOnce(hb, receiverAddr)
@@ -251,4 +263,13 @@ func Leave() {
 
 	// Kill goroutines for sending and recieving heartbeats
 	leave = true
+}
+
+func printMemberList() {
+	currNode := memberList.GetHead()
+	if(currNode == nil){
+		fmt.Println("No members to print")
+	} else {
+		fmt.Printf("Node id: %d\n", currNode.GetId())
+	}
 }

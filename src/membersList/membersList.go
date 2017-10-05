@@ -3,31 +3,32 @@ package membersList
 import (
 	"sync"
 	"strconv"
-	// "fmt"
+	"fmt"
 )
 
 type MembersList struct {
 	head *Node
+	nodeMap map[int]*Node // Map of node id to node pointer
 	mu sync.Mutex
 }
 
-// Map of node id to node pointer
-var nodeMap map[int]*Node
 
-func NewMembershipList(head *Node) *MembersList{
-	nodeMap[head.GetId()] = head
-	return &MembersList{ head:head }
+func NewMembershipList() MembersList{
+	return MembersList{ head:nil, nodeMap:make(map[int]*Node) }
 }
 
 func (m *MembersList) GetHead() *Node {
 	m.mu.Lock()
-	node := m.head
+	head := m.head
 	m.mu.Unlock()
-	return node
+	return head
 }
 
 func (m *MembersList) GetNode(id int) *Node {
-	return nodeMap[id]
+	m.mu.Lock()
+	node := m.nodeMap[id]
+	m.mu.Unlock()
+	return node
 }
 
 func (m *MembersList) Read() [] string {
@@ -58,19 +59,16 @@ func (m *MembersList) Read() [] string {
 	return list
 }
 
-// func (m *MembersList) Size() int {
-// 	m.mu.Lock()
-// 	head := m.head
-// 	m.mu.Unlock()
+func (m *MembersList) Size() int {
+	m.mu.Lock()
+	nMap := m.nodeMap
+	m.mu.Unlock()
 
-// 	if(head == nil) {
-// 		return 0
-// 	} else {
-// 		return len(m.Read())
-// 	}
-// }
+	return len(nMap)
+}
 
 func (m *MembersList) Insert(newNode *Node) {
+	fmt.Println("insert")
 	id := newNode.GetId()
 	m.mu.Lock()
 	if(m.head == nil) {
@@ -96,15 +94,15 @@ func (m *MembersList) Insert(newNode *Node) {
 		if(newNode.rrNeighbor != nil) {
 			newNode.rrNeighbor.llNeighbor = newNode
 		}
-
-		nodeMap[id] = newNode
 	}
+
+	m.nodeMap[id] = newNode
 	m.mu.Unlock()
 }
 
 func (m *MembersList) Remove(id int) {
 	m.mu.Lock()
-	node := nodeMap[id]
+	node := m.nodeMap[id]
 	
 	if(node != nil) {
 		// Choose new head if we remove current head
@@ -123,7 +121,7 @@ func (m *MembersList) Remove(id int) {
 		node.lNeighbor = nil
 		node.llNeighbor = nil
 
-		delete(nodeMap, id)
+		delete(m.nodeMap, id)
 	}
 	m.mu.Unlock()
 }
