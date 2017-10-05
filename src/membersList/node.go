@@ -12,14 +12,14 @@ const (
 )
 
 type Node struct {
-	id int
-	hbCounter int
-	timestamp time.Time
-	rNeighbor *Node
-	rrNeighbor *Node
-	lNeighbor *Node
-	llNeighbor *Node
-	status int
+	Id int
+	HbCounter int
+	Timestamp time.Time
+	RNeighbor *Node
+	RrNeighbor *Node
+	LNeighbor *Node
+	LlNeighbor *Node
+	Status int
 }
 
 func NewNode(id int, hbCount int, timestamp time.Time, rNeighbor *Node, rrNeighbor *Node, lNeighbor *Node, llNeighbor *Node, status int) * Node {
@@ -27,44 +27,44 @@ func NewNode(id int, hbCount int, timestamp time.Time, rNeighbor *Node, rrNeighb
 }
 
 func (n *Node) GetId() int {
-	return n.id
+	return n.Id
 }
 
 func (n *Node) GetHBCount() int {
-	return n.hbCounter
+	return n.HbCounter
 }
 
 func (n *Node) GetTimestamp() time.Time {
-	return n.timestamp
+	return n.Timestamp
 }
 
 func (n *Node) GetNeighbors() (*Node, *Node, *Node, *Node) {
-	return n.rNeighbor, n.rrNeighbor, n.lNeighbor, n.llNeighbor
+	return n.RNeighbor, n.RrNeighbor, n.LNeighbor, n.LlNeighbor
 }
 
 func (n *Node) GetStatus() int {
-	return n.status
+	return n.Status
 }
 
 func (n *Node) IncrementHBCounter() {
-	n.hbCounter++
+	n.HbCounter++
 }
 
 func (n *Node) SetHBCounter(hbCount int) {
-	n.hbCounter = hbCount
+	n.HbCounter = hbCount
 }
 
 func (n *Node) SetNeighbors(rNeighbor *Node, rrNeighbor *Node, lNeighbor *Node, llNeighbor *Node) {
-	n.rNeighbor = rNeighbor
-	n.rrNeighbor = rrNeighbor
-	n.lNeighbor = lNeighbor
-	n.llNeighbor = llNeighbor
+	n.RNeighbor = rNeighbor
+	n.RrNeighbor = rrNeighbor
+	n.LNeighbor = lNeighbor
+	n.LlNeighbor = llNeighbor
 }
 
 func (n *Node) SetStatus(status int) {
-	n.status = status
+	n.Status = status
 }
 
 func (n *Node) Next() *Node {
-	return n.rNeighbor
+	return n.RNeighbor
 }
