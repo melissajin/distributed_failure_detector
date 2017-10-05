@@ -4,6 +4,12 @@ import(
 	. "membersList"
 )
 
+// Status of machine
+const (
+	UPDATE = iota	// 0
+	JOIN			// 1
+)
+
 type Heartbeat struct {
 	id int
 	membershipList MembersList

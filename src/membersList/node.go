@@ -7,9 +7,8 @@ import (
 // Status of machine
 const (
 	ALIVE = iota	// 0
-	JOIN			// 1
-	LEAVE			// 2
-	FAILED			// 3
+	LEAVE			// 1
+	FAILED			// 2
 )
 
 type Node struct {

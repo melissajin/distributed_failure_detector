@@ -55,38 +55,37 @@ func main() {
 	}
 }
 
-func Listen(port int, receiverHost string, receiverId string) {
-	addr := receiverHost + ":" + strconv.Itoa(port)
+func Listen(port int) {
+	host, id := GetIdentity()
+	idStr := strconv.Itoa(id)
+	addr := host + ":" + strconv.Itoa(port)
 
-	// Don't start gossip until > 5 machines in the system
-	for memberList.Size() < 6 {}
+	// Don't start gossip until > 5 machines in the system or if machine is entry machine
+	for memberList.Size() < 6 {
+		if(id == entryMachineId) {
+			break
+		}
+	}
 
 	ln, err := net.Listen("udp", addr)
 	if err != nil {
 		log.Fatal("Error when listening to port:", err)
 	}
-	host, id := GetIdentity()
-	idStr := strconv.Itoa(id)
 	for {
 		if(leave == true) {
 			break
 		}
 
 		select {
-		case <- time.After(detectionTime): // TODO: need to reset detectionTime when recieve hb
-			fmt.Println("FAILED")
-			//remove id from list
-			removeId, _ := strconv.Atoi(receiverId)
+		case <- time.After(detectionTime):
+			currNode := memberList.GetNode(id)
+			failedId := getNeighbor(port-8000, currNode)
+			failedNode := memberList.GetNode(failedId)
 
-			//heartbeat failure
-			hb := NewHeartbeat(id, memberList, FAILED)
-			for i := 0; i < connections; i++ {
-				receiverId := strconv.Itoa((id + i + 1) % memberList.Size())
-				receiverAddr := strings.Replace(host, idStr, receiverId, -1)  + ":" + strconv.Itoa(8000)
-				SendOnce(hb, receiverAddr)
-			}
+			failedNode.SetStatus(FAILED)
+			failedNode.IncrementHBCounter()
 
-			go Cleanup(removeId)
+			go Cleanup(failedId)
 
 		default:
 			// accept and read heartbeat struct from server
@@ -102,10 +101,18 @@ func Listen(port int, receiverHost string, receiverId string) {
 				log.Fatal("decode error:", err)
 			}
 
-			//merge membership lists
-			membershipList := hb.GetMembershipList()
-			UpdateMembershipLists(membershipList)
+			hbStatus := hb.GetStatus()
+			receivedMembershipList := hb.GetMembershipList()
+			receivedId := hb.GetId()
+			receivedIdStr := strconv.Itoa(receivedId)
+			UpdateMembershipLists(receivedMembershipList)
 
+			if(hbStatus == JOIN && id == entryMachineId) {
+				// Send hb to new node with current membership list
+				entryHB := NewHeartbeat(id, memberList, UPDATE)
+				newMachineAddr := strings.Replace(host, idStr, receivedIdStr, -1) + ":" + strconv.Itoa(8000)
+				SendOnce(entryHB, newMachineAddr)
+			} 
 			conn.Close()
 		}
 	}
@@ -115,6 +122,12 @@ func Listen(port int, receiverHost string, receiverId string) {
 func Cleanup(id int) {
 	time.After(cleanupTime)
 	memberList.Remove(id)
+
+	// Kill goroutines for sending and recieving heartbeats
+	_, currId := GetIdentity()
+	if(currId == id){
+		leave = true
+	}
 }
 
 func UpdateMembershipLists(receivedList MembersList) {
@@ -130,21 +143,21 @@ func UpdateMembershipLists(receivedList MembersList) {
 
 		if (currNode == nil && receivedStatus == ALIVE) {
 			memberList.Insert(receivedNode)
-			continue
-		}
+		} else {
+			// currStatus := currNode.GetStatus()
+			currHBCount := currNode.GetHBCount()
 
-		// currStatus := currNode.GetStatus()
-		currHBCount := currNode.GetHBCount()
-
-		if(currHBCount < receivedHbCount) {
-			if(receivedStatus == ALIVE) {
-				r, rr, l, ll := receivedNode.GetNeighbors()
-				currNode.SetHBCounter(receivedHbCount)
-				currNode.SetNeighbors(r, rr, l, ll)
-				currNode.SetStatus(receivedStatus)
-			} else if (receivedStatus == LEAVE || receivedStatus == FAILED) {
-				currNode.SetStatus(receivedStatus)
-				go Cleanup(receivedId)
+			if(currHBCount < receivedHbCount) {
+				if(receivedStatus == ALIVE) {
+					r, rr, l, ll := receivedNode.GetNeighbors()
+					currNode.SetHBCounter(receivedHbCount)
+					currNode.SetNeighbors(r, rr, l, ll)
+					currNode.SetStatus(receivedStatus)
+				} else if (receivedStatus == LEAVE || receivedStatus == FAILED) {
+					currNode.SetHBCounter(receivedHbCount)
+					currNode.SetStatus(receivedStatus)
+					go Cleanup(receivedId)
+				}
 			}
 		}
 
@@ -183,7 +196,7 @@ func Gossip(port int, host string, id int) {
 		currNode := memberList.GetNode(id)
 		currNode.IncrementHBCounter()
 
-		hb := NewHeartbeat(id, memberList, ALIVE)
+		hb := NewHeartbeat(id, memberList, UPDATE)
 		SendOnce(hb, addr)
 	}
 }
@@ -221,7 +234,7 @@ func Join() {
 		SendOnce(entryHB, entryMachineAddr)
 
 		//receive heartbeat from entry machine and update memberList
-		ln, err := net.Listen("udp", entryMachineIdStr)
+		ln, err := net.Listen("udp", entryMachineAddr)
 		conn, err := ln.Accept()
 		dec := gob.NewDecoder(conn)
 		var heartbeat Heartbeat
@@ -238,31 +251,38 @@ func Join() {
 
 	// start 2 threads for each connection, each listening to different port
 	for i := 0; i < connections; i++ {
-		receiverId := strconv.Itoa((id + i + 1) % memberList.Size())
-		receiverHost := strings.Replace(host, idStr, receiverId, -1)
+		receiverId := getNeighbor(i, node)
+		recieverIdStr := strconv.Itoa(receiverId)
+		receiverHost := strings.Replace(host, idStr, recieverIdStr, -1)
 		leave = false
-		go Listen(8000 + i, receiverHost, receiverId)
+		go Listen(8000 + i)
 		go Gossip(8000 + i, receiverHost, id)
 	}
 }
 
-func Leave() {
-	//remove self from membership list
-	host, id := GetIdentity()
-	idStr := strconv.Itoa(id)
-	memberList.Remove(id)
-
-	// Send heartbeat to leave
-	hb := NewHeartbeat(id, memberList, LEAVE)
-	for i := 0; i < connections; i++ {
-		receiverId := strconv.Itoa((id + i + 1) % memberList.Size())
-		receiverAddr := strings.Replace(host, idStr, receiverId, -1) + ":" + strconv.Itoa(8000)
-
-		SendOnce(hb, receiverAddr)
+func getNeighbor(num int, currNode *Node) int {
+	r, rr, l, ll := currNode.GetNeighbors()
+	var neighbor *Node
+	if(num == 0) {
+		neighbor = rr
+	} else if(num == 1) {
+		neighbor = r
+	} else if(num == 2) {
+		neighbor = l
+	} else if(num == 3) {
+		neighbor = ll
 	}
 
-	// Kill goroutines for sending and recieving heartbeats
-	leave = true
+	return neighbor.GetId()
+}
+
+func Leave() {
+	//remove self from membership list
+	_, id := GetIdentity()
+	leaveNode := memberList.GetNode(id)
+
+	leaveNode.SetStatus(LEAVE)
+	go Cleanup(id)
 }
 
 func printMemberList() {
