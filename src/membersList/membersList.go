@@ -37,19 +37,19 @@ func (m *MembersList) Read() [] string {
 	m.Mu.Lock()
 	node := m.Head
 	if(node != nil) {
-		for node.rNeighbor != nil && node.rNeighbor != m.Head {
-			if(node.status == ALIVE) {
-				id := strconv.Itoa(node.id)
-				ts := node.timestamp.String()
+		for node.RNeighbor != nil && node.RNeighbor != m.Head {
+			if(node.Status == ALIVE) {
+				id := strconv.Itoa(node.Id)
+				ts := node.Timestamp.String()
 				member := id + ts
 				list = append(list, member)
-				node = node.rNeighbor
+				node = node.RNeighbor
 			}
 		}
 
-		if(node.status == ALIVE) {
-			id := strconv.Itoa(node.id)
-			ts := node.timestamp.String()
+		if(node.Status == ALIVE) {
+			id := strconv.Itoa(node.Id)
+			ts := node.Timestamp.String()
 			member := id + ts
 			list = append(list, member)
 		}
@@ -74,25 +74,25 @@ func (m *MembersList) Insert(newNode *Node) {
 	if(m.Head == nil) {
 		m.Head = newNode
 	} else{
-		newNode.rNeighbor = m.Head.rNeighbor
-		newNode.rrNeighbor = m.Head.rrNeighbor
-		newNode.lNeighbor = m.Head
-		newNode.llNeighbor = m.Head.lNeighbor
+		newNode.RNeighbor = m.Head.RNeighbor
+		newNode.RrNeighbor = m.Head.RrNeighbor
+		newNode.LNeighbor = m.Head
+		newNode.LlNeighbor = m.Head.LNeighbor
 
-		if(m.Head.lNeighbor != nil) {
-			m.Head.lNeighbor.rrNeighbor = newNode
+		if(m.Head.LNeighbor != nil) {
+			m.Head.LNeighbor.RrNeighbor = newNode
 		}
 
-		m.Head.rNeighbor = newNode
-		m.Head.rrNeighbor = newNode.rNeighbor
+		m.Head.RNeighbor = newNode
+		m.Head.RrNeighbor = newNode.RNeighbor
 
-		if(newNode.rNeighbor != nil) {
-			newNode.rNeighbor.lNeighbor = newNode
-			newNode.rNeighbor.llNeighbor = m.Head
+		if(newNode.RNeighbor != nil) {
+			newNode.RNeighbor.LNeighbor = newNode
+			newNode.RNeighbor.LlNeighbor = m.Head
 		}
 
-		if(newNode.rrNeighbor != nil) {
-			newNode.rrNeighbor.llNeighbor = newNode
+		if(newNode.RrNeighbor != nil) {
+			newNode.RrNeighbor.LlNeighbor = newNode
 		}
 	}
 
@@ -107,19 +107,19 @@ func (m *MembersList) Remove(id int) {
 	if(node != nil) {
 		// Choose new head if we remove current head
 		if(node == m.Head) {
-			m.Head = node.rNeighbor // TODO: check if rNeighbor is nil
+			m.Head = node.RNeighbor // TODO: check if rNeighbor is nil
 		}
 
-		node.rNeighbor.lNeighbor = node.lNeighbor
-		node.rNeighbor.llNeighbor = node.llNeighbor
-		node.lNeighbor.rrNeighbor = node.rrNeighbor
-		node.lNeighbor.rNeighbor = node.rNeighbor
-		node.llNeighbor.rrNeighbor = node.rNeighbor
-		node.rrNeighbor.llNeighbor = node.llNeighbor
-		node.rrNeighbor = nil
-		node.rNeighbor = nil
-		node.lNeighbor = nil
-		node.llNeighbor = nil
+		node.RNeighbor.LNeighbor = node.LNeighbor
+		node.RNeighbor.LlNeighbor = node.LlNeighbor
+		node.LNeighbor.RrNeighbor = node.RrNeighbor
+		node.LNeighbor.RNeighbor = node.RNeighbor
+		node.LlNeighbor.RrNeighbor = node.RNeighbor
+		node.RrNeighbor.LlNeighbor = node.LlNeighbor
+		node.RrNeighbor = nil
+		node.RNeighbor = nil
+		node.LNeighbor = nil
+		node.LlNeighbor = nil
 
 		delete(m.NodeMap, id)
 	}
