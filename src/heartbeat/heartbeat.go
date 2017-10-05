@@ -11,9 +11,9 @@ const (
 )
 
 type Heartbeat struct {
-	id int
-	membershipList MembersList
-	status int
+	Id int
+	MembershipList MembersList
+	Status int
 }
 
 func NewHeartbeat(id int, membershipList MembersList, status int) *Heartbeat {
@@ -21,13 +21,13 @@ func NewHeartbeat(id int, membershipList MembersList, status int) *Heartbeat {
 }
 
 func (hb *Heartbeat) GetId() int {
-	return hb.id
+	return hb.Id
 }
 
 func (hb *Heartbeat) GetMembershipList() MembersList {
-	return hb.membershipList
+	return hb.MembershipList
 }
 
 func (hb *Heartbeat) GetStatus() int {
-	return hb.status
+	return hb.Status
 }

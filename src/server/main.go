@@ -13,6 +13,7 @@ import (
 	. "membersList"
 	"encoding/gob"
 	"log"
+	"bytes"
 )
 
 var memberList MembersList
@@ -56,24 +57,16 @@ func main() {
 }
 
 func Listen(port int) {
-	host, id := GetIdentity()
-	idStr := strconv.Itoa(id)
-	addr := host + ":" + strconv.Itoa(port)
+	_, id := GetIdentity()
+	addr := getReceiverHost(id, port)
 
-	// Don't start gossip until > 5 machines in the system or if machine is entry machine
-	for memberList.Size() < 6 {
-		if(id == entryMachineId) {
-			break
-		}
-	}
-
-	ln, err := net.Listen("udp", addr)
-	if err != nil {
-		log.Fatal("Error when listening to port:", err)
-	}
 	for {
 		if(leave == true) {
 			break
+		}
+
+		if(memberList.Size() < 6 && id != entryMachineId) {
+			continue
 		}
 
 		select {
@@ -89,12 +82,14 @@ func Listen(port int) {
 
 		default:
 			// accept and read heartbeat struct from server
-			conn, err := ln.Accept()
+			pc, err := net.ListenPacket("udp", addr)
 			if err != nil {
-				log.Fatal("Error when accepting connection:", err)
+				log.Fatal("Error when listening to port:", err)
 			}
-
-			dec := gob.NewDecoder(conn)
+			buffer := make([]byte, 1024)
+			pc.ReadFrom(buffer)
+			network := bytes.NewBuffer(buffer)
+			dec := gob.NewDecoder(network)
 			var hb Heartbeat
 			err = dec.Decode(&hb)
 			if err != nil {
@@ -103,19 +98,25 @@ func Listen(port int) {
 
 			hbStatus := hb.GetStatus()
 			receivedMembershipList := hb.GetMembershipList()
-			receivedId := hb.GetId()
-			receivedIdStr := strconv.Itoa(receivedId)
 			UpdateMembershipLists(receivedMembershipList)
 
 			if(hbStatus == JOIN && id == entryMachineId) {
 				// Send hb to new node with current membership list
 				entryHB := NewHeartbeat(id, memberList, UPDATE)
-				newMachineAddr := strings.Replace(host, idStr, receivedIdStr, -1) + ":" + strconv.Itoa(8000)
+				newMachineAddr := getReceiverHost(id, 8000)
 				SendOnce(entryHB, newMachineAddr)
 			} 
-			conn.Close()
+			pc.Close()
 		}
 	}
+}
+
+func getReceiverHost(machineNum int, portNum int) string {
+	var machineStr string
+	if(machineNum < 10) {
+		machineStr = "0" + strconv.Itoa(machineNum)
+	}
+	return "fa17-cs425-g46-" + machineStr +".cs.illinois.edu:" + strconv.Itoa(portNum)
 }
 
 //Cleanup after clean up period
@@ -177,27 +178,25 @@ func GetIdentity() (string, int) {
 	return host, id
 }
 
-func Gossip(port int, host string, id int) {
-	addr := host + ":" + strconv.Itoa(port)
+func Gossip(port int, id int) {
+	currNode := memberList.GetNode(id)
+	for(memberList.Size() < 6) {}
+	receiverId := getNeighbor(port - 8000, currNode)
+	receiverAddr := getReceiverHost(receiverId, port)
+
 	for {
 		if(leave == true) {
 			break
-		}
-
-		// Don't start gossip until > 5 machines in the system
-		if(memberList.Size() < 6){
-			continue
 		}
 
 		//send heartbeat after certain duration
 		time.After(heartbeatInterval)
 
 		//increment heartbeat counter for node sending hb
-		currNode := memberList.GetNode(id)
 		currNode.IncrementHBCounter()
 
 		hb := NewHeartbeat(id, memberList, UPDATE)
-		SendOnce(hb, addr)
+		SendOnce(hb, receiverAddr)
 	}
 }
 
@@ -208,18 +207,16 @@ func SendOnce(hb *Heartbeat, addr string) {
 		log.Fatal("Error connecting to server: ", err)
 	}
 	enc := gob.NewEncoder(conn)
-	//conn.Write([]byte(hb))
-	e := enc.Encode(*hb)
+	e := enc.Encode(hb)
 	if e != nil {
-		log.Fatal("encode error:", err)
+		log.Fatal("encode error:", e)
 	}
+	//conn.Write(network.Bytes())
 	conn.Close()
 }
 
 func Join() {
-	host, id := GetIdentity()
-	idStr := strconv.Itoa(id)
-	entryMachineIdStr := strconv.Itoa(entryMachineId)
+	_, id := GetIdentity()
 
 	// Create node and membership list and entry heartbeat
 	node := NewNode(id, 0, time.Now(), nil, nil, nil, nil, ALIVE)
@@ -230,7 +227,7 @@ func Join() {
 		entryHB := NewHeartbeat(id, memberList, JOIN)
 
 		// Send entry heartbeat to entry machine
-		entryMachineAddr := strings.Replace(host, idStr, entryMachineIdStr, -1) + ":" + strconv.Itoa(8000)
+		entryMachineAddr := getReceiverHost(entryMachineId, 8000)
 		SendOnce(entryHB, entryMachineAddr)
 
 		//receive heartbeat from entry machine and update memberList
@@ -251,12 +248,9 @@ func Join() {
 
 	// start 2 threads for each connection, each listening to different port
 	for i := 0; i < connections; i++ {
-		receiverId := getNeighbor(i, node)
-		recieverIdStr := strconv.Itoa(receiverId)
-		receiverHost := strings.Replace(host, idStr, recieverIdStr, -1)
 		leave = false
 		go Listen(8000 + i)
-		go Gossip(8000 + i, receiverHost, id)
+		go Gossip(8000 + i, id)
 	}
 }
 
