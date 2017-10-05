@@ -7,37 +7,37 @@ import (
 )
 
 type MembersList struct {
-	head *Node
-	nodeMap map[int]*Node // Map of node id to node pointer
-	mu sync.Mutex
+	Head *Node
+	NodeMap map[int]*Node // Map of node id to node pointer
+	Mu sync.Mutex
 }
 
 
 func NewMembershipList() MembersList{
-	return MembersList{ head:nil, nodeMap:make(map[int]*Node) }
+	return MembersList{ Head:nil, NodeMap:make(map[int]*Node) }
 }
 
 func (m *MembersList) GetHead() *Node {
-	m.mu.Lock()
-	head := m.head
-	m.mu.Unlock()
+	m.Mu.Lock()
+	head := m.Head
+	m.Mu.Unlock()
 	return head
 }
 
 func (m *MembersList) GetNode(id int) *Node {
-	m.mu.Lock()
-	node := m.nodeMap[id]
-	m.mu.Unlock()
+	m.Mu.Lock()
+	node := m.NodeMap[id]
+	m.Mu.Unlock()
 	return node
 }
 
 func (m *MembersList) Read() [] string {
 	var list []string
 
-	m.mu.Lock()
-	node := m.head
+	m.Mu.Lock()
+	node := m.Head
 	if(node != nil) {
-		for node.rNeighbor != nil && node.rNeighbor != m.head {
+		for node.rNeighbor != nil && node.rNeighbor != m.Head {
 			if(node.status == ALIVE) {
 				id := strconv.Itoa(node.id)
 				ts := node.timestamp.String()
@@ -54,15 +54,15 @@ func (m *MembersList) Read() [] string {
 			list = append(list, member)
 		}
 	}
-	m.mu.Unlock()
+	m.Mu.Unlock()
 
 	return list
 }
 
 func (m *MembersList) Size() int {
-	m.mu.Lock()
-	nMap := m.nodeMap
-	m.mu.Unlock()
+	m.Mu.Lock()
+	nMap := m.NodeMap
+	m.Mu.Unlock()
 
 	return len(nMap)
 }
@@ -70,25 +70,25 @@ func (m *MembersList) Size() int {
 func (m *MembersList) Insert(newNode *Node) {
 	fmt.Println("insert")
 	id := newNode.GetId()
-	m.mu.Lock()
-	if(m.head == nil) {
-		m.head = newNode
+	m.Mu.Lock()
+	if(m.Head == nil) {
+		m.Head = newNode
 	} else{
-		newNode.rNeighbor = m.head.rNeighbor
-		newNode.rrNeighbor = m.head.rrNeighbor
-		newNode.lNeighbor = m.head
-		newNode.llNeighbor = m.head.lNeighbor
+		newNode.rNeighbor = m.Head.rNeighbor
+		newNode.rrNeighbor = m.Head.rrNeighbor
+		newNode.lNeighbor = m.Head
+		newNode.llNeighbor = m.Head.lNeighbor
 
-		if(m.head.lNeighbor != nil) {
-			m.head.lNeighbor.rrNeighbor = newNode
+		if(m.Head.lNeighbor != nil) {
+			m.Head.lNeighbor.rrNeighbor = newNode
 		}
 
-		m.head.rNeighbor = newNode
-		m.head.rrNeighbor = newNode.rNeighbor
+		m.Head.rNeighbor = newNode
+		m.Head.rrNeighbor = newNode.rNeighbor
 
 		if(newNode.rNeighbor != nil) {
 			newNode.rNeighbor.lNeighbor = newNode
-			newNode.rNeighbor.llNeighbor = m.head
+			newNode.rNeighbor.llNeighbor = m.Head
 		}
 
 		if(newNode.rrNeighbor != nil) {
@@ -96,18 +96,18 @@ func (m *MembersList) Insert(newNode *Node) {
 		}
 	}
 
-	m.nodeMap[id] = newNode
-	m.mu.Unlock()
+	m.NodeMap[id] = newNode
+	m.Mu.Unlock()
 }
 
 func (m *MembersList) Remove(id int) {
-	m.mu.Lock()
-	node := m.nodeMap[id]
+	m.Mu.Lock()
+	node := m.NodeMap[id]
 	
 	if(node != nil) {
 		// Choose new head if we remove current head
-		if(node == m.head) {
-			m.head = node.rNeighbor // TODO: check if rNeighbor is nil
+		if(node == m.Head) {
+			m.Head = node.rNeighbor // TODO: check if rNeighbor is nil
 		}
 
 		node.rNeighbor.lNeighbor = node.lNeighbor
@@ -121,7 +121,7 @@ func (m *MembersList) Remove(id int) {
 		node.lNeighbor = nil
 		node.llNeighbor = nil
 
-		delete(m.nodeMap, id)
+		delete(m.NodeMap, id)
 	}
-	m.mu.Unlock()
+	m.Mu.Unlock()
 }
