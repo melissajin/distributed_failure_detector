@@ -6,13 +6,12 @@ import(
 
 type Heartbeat struct {
 	id int
-	host string
 	membershipList MembersList
 	status int
 }
 
-func NewHeartbeat(id int, host string, membershipList MembersList, status int) *Heartbeat {
-	return &Heartbeat{id, host, membershipList, status}
+func NewHeartbeat(id int, membershipList MembersList, status int) *Heartbeat {
+	return &Heartbeat{id, membershipList, status}
 }
 
 func (hb *Heartbeat) GetId() int {

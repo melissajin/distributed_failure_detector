@@ -73,10 +73,10 @@ func Listen(port int, receiverHost string, receiverId string) {
 			removeId, _ := strconv.Atoi(receiverId)
 
 			//heartbeat failure
-			hb := NewHeartbeat(id, host, memberList, FAILED)
+			hb := NewHeartbeat(id, memberList, FAILED)
 			for i := 0; i < connections; i++ {
 				receiverId := strconv.Itoa((id + i + 1) % len(memberList.Read()))
-				receiverAddr := strings.Replace(host, idStr, receiverId, -1)
+				receiverAddr := strings.Replace(host, idStr, receiverId, -1)  + ":" + strconv.Itoa(8000)
 				SendOnce(hb, receiverAddr)
 			}
 
@@ -158,7 +158,7 @@ func GetIdentity() (string, int) {
 	return host, id
 }
 
-func Send(port int, host string, id int) {
+func Gossip(port int, host string, id int) {
 	addr := host + ":" + strconv.Itoa(port)
 	for {
 		if(leave == true) {
@@ -171,7 +171,7 @@ func Send(port int, host string, id int) {
 		currNode := memberList.GetNode(id)
 		currNode.IncrementHBCounter()
 
-		hb := NewHeartbeat(id, host, memberList, ALIVE)
+		hb := NewHeartbeat(id, memberList, ALIVE)
 		SendOnce(hb, addr)
 	}
 }
@@ -198,26 +198,31 @@ func Join() {
 	// Create node and membership list and entry heartbeat
 	node := NewNode(id, 0, time.Now(), nil, nil, nil, nil, ALIVE)
 	memberList.Insert(node)
-	entryHB := NewHeartbeat(id, host, memberList, JOIN)
 
-	// Send entry heartbeat to entry machine
-	entryMachineAddr := strings.Replace(host, idStr, entryMachineIdStr, -1)
-	SendOnce(entryHB, entryMachineAddr)
+	// Get membership list from entry machine
+	if(id != entryMachineId) {
+		entryHB := NewHeartbeat(id, memberList, JOIN)
 
-	//receive heartbeat from entry machine and update memberList
-	ln, err := net.Listen("udp", entryMachineIdStr)
-	conn, err := ln.Accept()
-	dec := gob.NewDecoder(conn)
-	var heartbeat Heartbeat
-	err = dec.Decode(&heartbeat)
-	if err != nil {
-		log.Fatal("decode error:", err)
+		// Send entry heartbeat to entry machine
+		entryMachineAddr := strings.Replace(host, idStr, entryMachineIdStr, -1) + ":" + strconv.Itoa(8000)
+		fmt.Printf("entryMachineAddr %s", entryMachineAddr)
+		SendOnce(entryHB, entryMachineAddr)
+
+		//receive heartbeat from entry machine and update memberList
+		ln, err := net.Listen("udp", entryMachineIdStr)
+		conn, err := ln.Accept()
+		dec := gob.NewDecoder(conn)
+		var heartbeat Heartbeat
+		err = dec.Decode(&heartbeat)
+		if err != nil {
+			log.Fatal("decode error:", err)
+		}
+		conn.Close()
+
+		//merge membership lists
+		membershipList := heartbeat.GetMembershipList()
+		UpdateMembershipLists(membershipList)
 	}
-	conn.Close()
-
-	//merge membership lists
-	membershipList := heartbeat.GetMembershipList()
-	UpdateMembershipLists(membershipList)
 
 	// start 2 threads for each connection, each listening to different port
 	for i := 0; i < connections; i++ {
@@ -225,7 +230,7 @@ func Join() {
 		receiverHost := strings.Replace(host, idStr, receiverId, -1)
 		leave = false
 		go Listen(8000 + i, receiverHost, receiverId)
-		go Send(8000 + i, receiverHost, id)
+		go Gossip(8000 + i, receiverHost, id)
 	}
 }
 
@@ -236,10 +241,11 @@ func Leave() {
 	memberList.Remove(id)
 
 	// Send heartbeat to leave
-	hb := NewHeartbeat(id, host, memberList, LEAVE)
+	hb := NewHeartbeat(id, memberList, LEAVE)
 	for i := 0; i < connections; i++ {
 		receiverId := strconv.Itoa((id + i + 1) % len(memberList.Read()))
-		receiverAddr := strings.Replace(host, idStr, receiverId, -1)
+		receiverAddr := strings.Replace(host, idStr, receiverId, -1) + ":" + strconv.Itoa(8000)
+
 		SendOnce(hb, receiverAddr)
 	}
 

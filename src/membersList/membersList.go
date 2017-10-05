@@ -80,12 +80,23 @@ func (m *MembersList) Insert(newNode *Node) {
 		newNode.rrNeighbor = m.head.rrNeighbor
 		newNode.lNeighbor = m.head
 		newNode.llNeighbor = m.head.lNeighbor
+
+		if(m.head.lNeighbor != nil) {
+			m.head.lNeighbor.rrNeighbor = newNode
+		}
+
 		m.head.rNeighbor = newNode
 		m.head.rrNeighbor = newNode.rNeighbor
-		m.head.lNeighbor.rNeighbor = newNode
-		newNode.rNeighbor.lNeighbor = newNode
-		newNode.rNeighbor.llNeighbor = m.head
-		newNode.rrNeighbor. llNeighbor = newNode
+
+		if(newNode.rNeighbor != nil) {
+			newNode.rNeighbor.lNeighbor = newNode
+			newNode.rNeighbor.llNeighbor = m.head
+		}
+
+		if(newNode.rrNeighbor != nil) {
+			newNode.rrNeighbor.llNeighbor = newNode
+		}
+
 		nodeMap[id] = newNode
 	}
 	m.mu.Unlock()
