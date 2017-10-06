@@ -74,7 +74,7 @@ func Listen(port int) {
 			break
 		}
 
-		if(memberList.Size() < 6 && id != entryMachineId) {
+		if(memberList.Size() < 2 && id != entryMachineId) {
 			continue
 		}
 
@@ -82,8 +82,11 @@ func Listen(port int) {
 		case <- time.After(detectionTime):
 			currNode := memberList.GetNode(id)
 			failedId := getNeighbor(port-8000, currNode)
-			failedNode := memberList.GetNode(failedId)
+			if failedId == 0 {
+				continue
+			}
 
+			failedNode := memberList.GetNode(failedId)
 			failedNode.SetStatus(FAILED)
 			failedNode.IncrementHBCounter()
 
