@@ -89,7 +89,7 @@ func Listen(port int) {
 
 		default:
 			// accept and read heartbeat struct from server
-			buffer := make([]byte, 1024)
+			buffer := make([]byte, 62)
 			n, _, _ := conn.ReadFromUDP(buffer)
 			if n == 0 {
 				fmt.Println("FUCK")
