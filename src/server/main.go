@@ -194,7 +194,7 @@ func Gossip(port int, id int) {
 		if(leave == true) {
 			break
 		}
-		fmt.Println("GOSSIP 1")
+		fmt.Printf("GOSSIP 1 %d", port)
 		receiverId := getNeighbor(port - 8000, currNode)
 		if receiverId == 0 {
 			continue
