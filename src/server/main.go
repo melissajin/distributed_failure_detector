@@ -13,6 +13,8 @@ import (
 	"log"
 	"github.com/golang/protobuf/proto"
 	pb "heartbeat/heartbeat"
+	"unsafe"
+	"bytes"
 )
 
 var memberList MembersList
@@ -92,6 +94,7 @@ func Listen(port int) {
 
 		default:
 			buffer := make([]byte, 1024)
+			buffer = bytes.TrimRight(buffer, "0")
 			conn.ReadFrom(buffer)
 			hb := &pb.Heartbeat{}
 			err := proto.Unmarshal(buffer, hb)
