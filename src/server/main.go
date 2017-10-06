@@ -108,7 +108,7 @@ func Listen(port int) {
 			if(len(receivedMembershipList) == 1 && id == entryMachineId) {
 				// Send hb to new node with current membership list
 				entryHB := ConstructPBHeartbeat()
-				newMachineAddr := getReceiverHost(2, 8000)
+				newMachineAddr := getReceiverHost(2, 8001)
 				SendOnce(entryHB, newMachineAddr)
 			}
 			conn.Close()
@@ -254,6 +254,8 @@ func Join() {
 		entryMachineAddr := getReceiverHost(entryMachineId, 8000)
 		SendOnce(entryHB, entryMachineAddr)
 
+
+		entryMachineAddr = getReceiverHost(entryMachineId, 8001)
 		//receive heartbeat from entry machine and update memberList
 		udpAddr,err := net.ResolveUDPAddr("udp", entryMachineAddr)
 		if err != nil {
