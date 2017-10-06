@@ -49,7 +49,7 @@ func (m *MembersList) Read() [] string {
 		if(node.Status == ALIVE) {
 			id := strconv.Itoa(node.Id)
 			ts := node.Timestamp
-			member := "Machine Id: " + id + "Timestamp: " + ts
+			member := "Machine Id: " + id + " Timestamp: " + ts
 			list = append(list, member)
 		}
 	}

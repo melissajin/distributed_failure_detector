@@ -104,7 +104,7 @@ func Listen(port int) {
 			receivedMembershipList := hb.GetMachine()
 			receivedMachindId := int(hb.GetId())
 			UpdateMembershipLists(receivedMembershipList)
-
+			fmt.Println(receivedMembershipList)
 			if(len(receivedMembershipList) == 1 && id == entryMachineId) {
 				// Send hb to new node with current membership list
 				entryHB := ConstructPBHeartbeat()
