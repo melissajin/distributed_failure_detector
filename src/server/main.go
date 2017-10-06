@@ -39,7 +39,6 @@ func main() {
 	}
 	defer f.Close()
 	log.SetOutput(f)
-	log.Println("check to make sure it works")
 
 	for {
 		reader := bufio.NewReader(os.Stdin)
@@ -98,7 +97,7 @@ func Listen(port int) {
 			failedNode := memberList.GetNode(failedId)
 			failedNode.SetStatus(FAILED)
 			failedNode.IncrementHBCounter()
-
+			log.Printf("Machine %d failed", failedId)
 			go Cleanup(failedId)
 
 		default:
@@ -169,6 +168,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 		if currNode == nil && receivedStatus == ALIVE {
 			newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp)
 			memberList.Insert(newNode)
+			log.Printf("Machine %d joined", int(receivedId.Id))
 		} else {
 			currHBCount := currNode.GetHBCount()
 
@@ -298,6 +298,8 @@ func Join() {
 
 		//merge membership lists
 		UpdateMembershipLists(hb.Machine)
+	} else {
+		log.Printf("Machine %d joined", id)
 	}
 
 	// start 2 threads for each connection, each listening to different port
@@ -334,6 +336,7 @@ func Leave() {
 	leaveNode := memberList.GetNode(id)
 
 	leaveNode.SetStatus(LEAVE)
+	log.Printf("Machine %d left", id)
 	go Cleanup(id)
 }
 
