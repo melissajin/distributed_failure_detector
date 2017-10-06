@@ -95,15 +95,16 @@ func Listen(port int) {
 				fmt.Println("FUCK")
 			}
 			network := bytes.NewBuffer(buffer)
-			fmt.Println(network)
 			dec := gob.NewDecoder(network)
-			var hb Heartbeat
+			//var hb Heartbeat
+			//err = dec.Decode(&hb)
+			var hb string
 			err = dec.Decode(&hb)
 			if err != nil {
 				log.Fatal("decode error:", err)
 			}
 			fmt.Println(hb)
-			hbStatus := hb.GetStatus()
+			/*hbStatus := hb.GetStatus()
 			receivedMembershipList := hb.GetMembershipList()
 			UpdateMembershipLists(receivedMembershipList)
 
@@ -112,7 +113,7 @@ func Listen(port int) {
 				entryHB := NewHeartbeat(id, memberList, UPDATE)
 				newMachineAddr := getReceiverHost(id, 8000)
 				SendOnce(entryHB, newMachineAddr)
-			} 
+			}*/
 			conn.Close()
 		}
 	}
@@ -214,7 +215,9 @@ func SendOnce(hb *Heartbeat, addr string) {
 		log.Fatal("Error connecting to server: ", err)
 	}
 	enc := gob.NewEncoder(conn)
-	e := enc.Encode(hb)
+	//e := enc.Encode(hb)
+	heartbeat := "KSJGNEKAJBNKAJBSFJA"
+	e := enc.Encode(&heartbeat)
 	if e != nil {
 		log.Fatal("encode error:", e)
 	}
