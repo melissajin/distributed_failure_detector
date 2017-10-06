@@ -67,8 +67,8 @@ func (m *MembersList) Insert(newNode *Node) {
 	fmt.Println(m.Head)
 	if(m.Head == nil) {
 		m.Head = newNode
-		m.Head.Right = newNode
-		m.Head.Left = newNode
+		newNode.Right = m.Head
+		newNode.Left = m.Head
 	} else{
 		newNode.Left = m.Head.Left
 		newNode.Right = m.Head
@@ -76,7 +76,7 @@ func (m *MembersList) Insert(newNode *Node) {
 		m.Head.Left.Right = newNode
 		m.Head.Left = newNode
 	}
-
+	fmt.Println(m.Head)
 	m.NodeMap[id] = newNode
 	m.mu.Unlock()
 }
