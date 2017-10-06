@@ -88,7 +88,9 @@ func (m *MembersList) Remove(id int) {
 	if node != nil {
 		fmt.Println("REMOVE 1")
 		if m.Size() == 1 {
+			fmt.Println("REMOVE 4")
 			m.Head = nil
+			fmt.Println("REMOVE 5")
 		} else {
 			fmt.Println("REMOVE 2")
 			// Choose new head if we remove current head
