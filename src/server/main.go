@@ -95,9 +95,11 @@ func Listen(port int) {
 			buffer := make([]byte, 1024)
 			ln.ReadFrom(buffer)
 			network := bytes.NewReader(buffer)
+			fmt.Println(buffer)
 			dec := gob.NewDecoder(network)
 			hb := &Heartbeat{}
 			err = dec.Decode(hb)
+			fmt.Println(hb)
 			if err != nil {
 				log.Fatal("decode error:", err)
 			}
