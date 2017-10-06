@@ -260,14 +260,15 @@ func Join() {
 	// Create node and membership list and entry heartbeat
 	node := NewNode(id, 0, time.Now().String())
 	memberList.Insert(node)
-
+	fmt.Println("JOIN 1")
 	// Get membership list from entry machine
 	if(id != entryMachineId) {
 		entryHB := ConstructPBHeartbeat()
-
+		fmt.Println("JOIN 2")
 		// Send entry heartbeat to entry machine
 		entryMachineAddr := getReceiverHost(entryMachineId, 8000)
 		SendOnce(entryHB, entryMachineAddr)
+		fmt.Println("JOIN 3")
 
 		//receive heartbeat from entry machine and update memberList
 		receiverMachineAddr := getReceiverHost(id, 8000)
@@ -275,11 +276,13 @@ func Join() {
 		if err != nil {
 			log.Fatal("Error getting UDP address:", err)
 		}
+		fmt.Println("JOIN 4")
 
 		conn, err := net.ListenUDP("udp", udpAddr)
 		if err != nil {
 			log.Fatal("Error listening to addr: ", err)
 		}
+
 		buffer := make([]byte, 1024)
 		conn.ReadFromUDP(buffer)
 		buffer = bytes.Trim(buffer, "\x00")
@@ -289,6 +292,7 @@ func Join() {
 			log.Fatal("Unmarshal2 error:", err)
 		}
 		conn.Close()
+		fmt.Println("JOIN 5")
 
 		//merge membership lists
 		UpdateMembershipLists(hb.Machine)
