@@ -93,7 +93,7 @@ func Listen(port int) {
 
 		default:
 			buffer := make([]byte, 1024)
-			_, receivedAddr, _ := conn.ReadFrom(buffer)
+			conn.ReadFrom(buffer)
 			buffer = bytes.Trim(buffer, "\x00")
 			hb := &pb.Heartbeat{}
 			err := proto.Unmarshal(buffer, hb)
@@ -108,8 +108,8 @@ func Listen(port int) {
 			if(len(receivedMembershipList) == 1 && id == entryMachineId) {
 				// Send hb to new node with current membership list
 				entryHB := ConstructPBHeartbeat()
-				//newMachineAddr := getReceiverHost(id, 8000)
-				SendOnce(entryHB, receivedAddr.String())
+				newMachineAddr := getReceiverHost(2, 8000)
+				SendOnce(entryHB, newMachineAddr)
 			}
 			conn.Close()
 		}
