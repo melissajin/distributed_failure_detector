@@ -13,7 +13,6 @@ import (
 	"log"
 	"github.com/golang/protobuf/proto"
 	pb "heartbeat/heartbeat"
-	"unsafe"
 	"bytes"
 )
 
