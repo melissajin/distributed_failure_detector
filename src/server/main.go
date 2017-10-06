@@ -231,15 +231,17 @@ func Join() {
 		SendOnce(entryHB, entryMachineAddr)
 
 		//receive heartbeat from entry machine and update memberList
-		ln, err := net.Listen("udp", entryMachineAddr)
-		conn, err := ln.Accept()
-		dec := gob.NewDecoder(conn)
+		pc, err := net.ListenPacket("udp", entryMachineAddr)
+		buffer := make([]byte, 1024)
+		pc.ReadFrom(buffer)
+		network := bytes.NewBuffer(buffer)
+		dec := gob.NewDecoder(network)
 		var heartbeat Heartbeat
 		err = dec.Decode(&heartbeat)
 		if err != nil {
 			log.Fatal("decode error:", err)
 		}
-		conn.Close()
+		pc.Close()
 
 		//merge membership lists
 		membershipList := heartbeat.GetMembershipList()
