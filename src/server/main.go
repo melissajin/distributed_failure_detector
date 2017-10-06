@@ -89,7 +89,7 @@ func Listen(port int) {
 
 		default:
 			// accept and read heartbeat struct from server
-			buffer := make([]byte, 1024)
+			/*buffer := make([]byte, 1024)
 			n, _, _ := conn.ReadFromUDP(buffer)
 			if n == 0 {
 				fmt.Println("FUCK")
@@ -97,8 +97,8 @@ func Listen(port int) {
 			fmt.Println(n)
 			fmt.Println(buffer)
 			network := bytes.NewBuffer(buffer)
-			fmt.Println(network)
-			dec := gob.NewDecoder(network)
+			fmt.Println(network)*/
+			dec := gob.NewDecoder(conn)
 			hb := &Heartbeat{}
 			err = dec.Decode(hb)
 			if err != nil {
