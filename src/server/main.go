@@ -135,40 +135,32 @@ func Cleanup(id int) {
 }
 
 func UpdateMembershipLists(receivedList []*pb.Machine) {
-	/*receivedNode := receivedList.GetHead()
-	count := 0
-	for count < receivedList.Size() {
+	for i := 0; i < len(receivedList); i++ {
+		machine := receivedList[i]
 		//get node info from their membership list
-		receivedStatus := receivedNode.GetStatus()
-		receivedHbCount := receivedNode.GetHBCount()
-		receivedId := receivedNode.GetId()
+		receivedId := machine.GetId()
+		nodeId := int(receivedId.Id)
+		receivedStatus := int(machine.GetStatus())
+		receivedHbCount := int(machine.GetHbCounter())
 
-		currNode := memberList.GetNode(receivedId)
+		currNode := memberList.GetNode(nodeId)
 
-		if (currNode == nil && receivedStatus == ALIVE) {
-			memberList.Insert(receivedNode)
+		if currNode == nil && receivedStatus == ALIVE {
+			newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp, nil, nil, nil, nil, receivedStatus)
+			memberList.Insert(newNode)
 		} else {
 			// currStatus := currNode.GetStatus()
 			currHBCount := currNode.GetHBCount()
 
-			if(currHBCount < receivedHbCount) {
-				if(receivedStatus == ALIVE) {
-					r, rr, l, ll := receivedNode.GetNeighbors()
-					currNode.SetHBCounter(receivedHbCount)
-					currNode.SetNeighbors(r, rr, l, ll)
-					currNode.SetStatus(receivedStatus)
-				} else if (receivedStatus == LEAVE || receivedStatus == FAILED) {
-					currNode.SetHBCounter(receivedHbCount)
-					currNode.SetStatus(receivedStatus)
-					go Cleanup(receivedId)
+			if currHBCount < receivedHbCount {
+				if receivedStatus == LEAVE || receivedStatus == FAILED {
+					go Cleanup(nodeId)
 				}
+				currNode.SetHBCounter(receivedHbCount)
+				currNode.SetStatus(receivedStatus)
 			}
 		}
-
-		receivedNode = receivedNode.Next()
-		count++
-	}*/
-	fmt.Println("UPDATE MEMBERSHIP LIST")
+	}
 }
 
 func GetIdentity() (string, int) {
@@ -225,7 +217,7 @@ func ConstructPBHeartbeat() *pb.Heartbeat{
 		machine := &pb.Machine{}
 		machineId := &pb.Machine_Id{}
 		machineId.Id = int32(node.GetId())
-		machineId.Timestamp = node.GetTimestamp().String()
+		machineId.Timestamp = node.GetTimestamp()
 		machine.HbCounter = int32(node.GetHBCount())
 		machine.Status = int32(node.GetStatus())
 		machine.Id = machineId
@@ -241,7 +233,7 @@ func Join() {
 	_, id := GetIdentity()
 
 	// Create node and membership list and entry heartbeat
-	node := NewNode(id, 0, time.Now(), nil, nil, nil, nil, ALIVE)
+	node := NewNode(id, 0, time.Now().String(), nil, nil, nil, nil, ALIVE)
 	memberList.Insert(node)
 
 	// Get membership list from entry machine
@@ -252,9 +244,8 @@ func Join() {
 		entryMachineAddr := getReceiverHost(entryMachineId, 8000)
 		SendOnce(entryHB, entryMachineAddr)
 
-
-		receiverMachineAddr := getReceiverHost(2, 8000)
 		//receive heartbeat from entry machine and update memberList
+		receiverMachineAddr := getReceiverHost(id, 8000)
 		udpAddr,err := net.ResolveUDPAddr("udp", receiverMachineAddr)
 		if err != nil {
 			log.Fatal("Error getting UDP address:", err)

@@ -14,7 +14,7 @@ const (
 type Node struct {
 	Id int
 	HbCounter int
-	Timestamp time.Time
+	Timestamp string
 	RNeighbor *Node
 	RrNeighbor *Node
 	LNeighbor *Node
@@ -22,7 +22,7 @@ type Node struct {
 	Status int
 }
 
-func NewNode(id int, hbCount int, timestamp time.Time, rNeighbor *Node, rrNeighbor *Node, lNeighbor *Node, llNeighbor *Node, status int) * Node {
+func NewNode(id int, hbCount int, timestamp string, rNeighbor *Node, rrNeighbor *Node, lNeighbor *Node, llNeighbor *Node, status int) * Node {
 	return &Node{ id, hbCount, timestamp, rNeighbor, rrNeighbor, lNeighbor, llNeighbor, status }
 }
 
@@ -34,7 +34,7 @@ func (n *Node) GetHBCount() int {
 	return n.HbCounter
 }
 
-func (n *Node) GetTimestamp() time.Time {
+func (n *Node) GetTimestamp() string {
 	return n.Timestamp
 }
 

@@ -39,7 +39,7 @@ func (m *MembersList) Read() [] string {
 		for node.RNeighbor != nil && node.RNeighbor != m.Head {
 			if(node.Status == ALIVE) {
 				id := strconv.Itoa(node.Id)
-				ts := node.Timestamp.String()
+				ts := node.Timestamp
 				member := id + ts
 				list = append(list, member)
 				node = node.RNeighbor
@@ -48,7 +48,7 @@ func (m *MembersList) Read() [] string {
 
 		if(node.Status == ALIVE) {
 			id := strconv.Itoa(node.Id)
-			ts := node.Timestamp.String()
+			ts := node.Timestamp
 			member := id + ts
 			list = append(list, member)
 		}
