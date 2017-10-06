@@ -183,14 +183,18 @@ func GetIdentity() (string, int) {
 
 func Gossip(port int, id int) {
 	currNode := memberList.GetNode(id)
-	for(memberList.Size() < 6) {}
-	receiverId := getNeighbor(port - 8000, currNode)
-	receiverAddr := getReceiverHost(receiverId, port)
+	for(memberList.Size() < 2) {}
 
 	for {
 		if(leave == true) {
 			break
 		}
+
+		receiverId := getNeighbor(port - 8000, currNode)
+		if receiverId == 0 {
+			continue
+		}
+		receiverAddr := getReceiverHost(receiverId, port)
 
 		//send heartbeat after certain duration
 		time.After(heartbeatInterval)
@@ -299,7 +303,11 @@ func getNeighbor(num int, currNode *Node) int {
 		neighbor = ll
 	}
 
-	return neighbor.GetId()
+	if neighbor != nil {
+		return neighbor.GetId()
+	} else {
+		return 0
+	}
 }
 
 func Leave() {
