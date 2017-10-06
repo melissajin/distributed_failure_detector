@@ -12,5 +12,6 @@ message Machine {
 }
 
 message Heartbeat {
-	repeated Machine machine = 1;
+	int32 id = 1;
+	repeated Machine machine = 2;
 }

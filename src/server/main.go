@@ -34,7 +34,7 @@ func main() {
 		fmt.Print("Command: ")
 		command, _, _ := reader.ReadLine()
 		text := string(command)
-		//text, _ := reader.ReadString('\n')
+
 		if(strings.Contains(text, "join")) {
 			go Join() //TODO: might need to use thread
 		} else if(strings.Contains(text, "leave")) {
@@ -101,13 +101,14 @@ func Listen(port int) {
 				log.Fatal("Unmarshal error:", err)
 			}
 			conn.Close()
-			receivedMembershipList := hb.Machine
+			receivedMembershipList := hb.GetMachine()
+			receivedMachindId := int(hb.GetId())
 			UpdateMembershipLists(receivedMembershipList)
 
 			if(len(receivedMembershipList) == 1 && id == entryMachineId) {
 				// Send hb to new node with current membership list
 				entryHB := ConstructPBHeartbeat()
-				newMachineAddr := getReceiverHost(2, 8000)
+				newMachineAddr := getReceiverHost(receivedMachindId, 8000)
 				SendOnce(entryHB, newMachineAddr)
 			}
 		}
@@ -211,7 +212,9 @@ func SendOnce(hb *pb.Heartbeat, addr string) {
 }
 
 func ConstructPBHeartbeat() *pb.Heartbeat{
+	_, id := GetIdentity()
 	hb := &pb.Heartbeat{}
+	hb.Id = int32(id)
 	node := memberList.GetHead()
 	for node != nil {
 		machine := &pb.Machine{}
