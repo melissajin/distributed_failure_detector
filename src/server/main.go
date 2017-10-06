@@ -261,6 +261,9 @@ func Join() {
 		}
 
 		conn, err := net.ListenUDP("udp", udpAddr)
+		if err != nil {
+			log.Fatal("Error listening to addr: " err)
+		}
 		buffer := make([]byte, 1024)
 		conn.ReadFromUDP(buffer)
 		buffer = bytes.Trim(buffer, "\x00")
