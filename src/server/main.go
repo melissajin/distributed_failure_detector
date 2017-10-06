@@ -93,11 +93,7 @@ func Listen(port int) {
 			n, _, _ := conn.ReadFromUDP(buffer)
 			if n == 0 {
 				fmt.Println("FUCK")
-			}
-			fmt.Println(n)
-			fmt.Println(buffer)
-			network := bytes.NewBuffer(buffer)
-			fmt.Println(network)*/
+			}*/
 			dec := gob.NewDecoder(conn)
 			hb := &Heartbeat{}
 			err = dec.Decode(hb)
@@ -211,10 +207,7 @@ func Gossip(port int, id int) {
 
 func SendOnce(hb *Heartbeat, addr string) {
 	fmt.Printf("SENDONCE %x %s\n", hb, addr)
-	udpAddr, err := net.ResolveUDPAddr("udp", addr)
-	localAddr, err := net.ResolveUDPAddr("udp", ":8000")
-
-	conn, err := net.DialUDP("udp", localAddr, udpAddr)
+	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		log.Fatal("Error connecting to server: ", err)
 	}
@@ -223,7 +216,7 @@ func SendOnce(hb *Heartbeat, addr string) {
 	if e != nil {
 		log.Fatal("encode error:", e)
 	}
-	//conn.Close()
+	conn.Close()
 }
 
 func Join() {
