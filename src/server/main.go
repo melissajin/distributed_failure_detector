@@ -29,7 +29,6 @@ const (
 
 func main() {
 	memberList = NewMembershipList()
-	leave = make(chan bool)
 	_, id := GetIdentity()
 
 	// Create logfile
@@ -262,6 +261,7 @@ func ConstructPBHeartbeat() *pb.Heartbeat{
 }
 
 func Join() {
+	leave = make(chan bool)
 	_, id := GetIdentity()
 
 	// Create node and membership list and entry heartbeat
@@ -335,7 +335,7 @@ func Leave() {
 	_, id := GetIdentity()
 
 	// Kill goroutines for sending and receiving heartbeats
-	leave <- true
+	close(leave)
 
 	//remove self from membership list
 	leaveNode := memberList.GetNode(id)
