@@ -73,19 +73,20 @@ func Listen(port int) {
 		if(leave == true) {
 			break
 		}
-
+		fmt.Println("LISTEN 1")
 		if(memberList.Size() < 2 && id != entryMachineId) {
 			continue
 		}
-
+		fmt.Println("LISTEN 2")
 		select {
 		case <- time.After(detectionTime):
+			fmt.Println("LISTEN 3")
 			currNode := memberList.GetNode(id)
 			failedId := getNeighbor(port-8000, currNode)
 			if failedId == 0 {
 				continue
 			}
-
+			fmt.Println("LISTEN 4")
 			failedNode := memberList.GetNode(failedId)
 			failedNode.SetStatus(FAILED)
 			failedNode.IncrementHBCounter()
@@ -93,6 +94,7 @@ func Listen(port int) {
 			go Cleanup(failedId)
 
 		default:
+			fmt.Println("LISTEN 5")
 			buffer := make([]byte, 1024)
 			conn, err := net.ListenUDP("udp", udpAddr)
 			conn.ReadFrom(buffer)
@@ -102,7 +104,7 @@ func Listen(port int) {
 			if(len(buffer) == 0){
 				continue
 			}
-
+			fmt.Println("LISTEN 6")
 			hb := &pb.Heartbeat{}
 			err = proto.Unmarshal(buffer, hb)
 			if err != nil {
@@ -113,7 +115,7 @@ func Listen(port int) {
 			receivedMachindId := int(hb.GetId())
 			UpdateMembershipLists(receivedMembershipList)
 			fmt.Println(receivedMembershipList)
-
+			fmt.Println("LISTEN 7")
 			if(len(receivedMembershipList) == 1 && id == entryMachineId) {
 				// Send hb to new node with current membership list
 				entryHB := ConstructPBHeartbeat()
@@ -192,11 +194,12 @@ func Gossip(port int, id int) {
 		if(leave == true) {
 			break
 		}
-
+		fmt.Println("GOSSIP 1")
 		receiverId := getNeighbor(port - 8000, currNode)
 		if receiverId == 0 {
 			continue
 		}
+		fmt.Println("GOSSIP 2")
 		receiverAddr := getReceiverHost(receiverId, port)
 
 		//send heartbeat after certain duration
