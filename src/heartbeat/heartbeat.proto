@@ -1,0 +1,16 @@
+syntax = "proto3";
+package heartbeat;
+
+message Machine {
+	message Id {
+		int32 id = 1;
+		string timestamp = 2;
+	}
+	Id id = 1;
+	int32 hbCounter = 2;
+	int32 status = 3;
+}
+
+message Heartbeat {
+	repeated Machine machine = 1;
+}

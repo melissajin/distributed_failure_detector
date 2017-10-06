@@ -9,11 +9,13 @@ import (
 	"strings"
 	"bufio"
 	"fmt"
-	. "heartbeat"
 	. "membersList"
 	"encoding/gob"
 	"log"
 	"bytes"
+	"github.com/golang/protobuf/proto"
+	pb "heartbeat/heartbeat"
+	"heartbeat"
 )
 
 var memberList MembersList
@@ -60,13 +62,13 @@ func Listen(port int) {
 	_, id := GetIdentity()
 	addr := getReceiverHost(id, port)
 
-	/*udpAddr,err := net.ResolveUDPAddr("udp",addr)
+	udpAddr,err := net.ResolveUDPAddr("udp",addr)
 	if err != nil {
 		log.Fatal("Error getting UDP address:", err)
 	}
 
-	conn, err := net.ListenUDP("udp", udpAddr)*/
-	ln, err := net.ListenPacket("udp", addr)
+	conn, err := net.ListenUDP("udp", udpAddr)
+
 	if err != nil {
 		log.Fatal("Error listening:", err)
 	}
@@ -93,28 +95,23 @@ func Listen(port int) {
 
 		default:
 			buffer := make([]byte, 1024)
-			ln.ReadFrom(buffer)
-			network := bytes.NewReader(buffer)
-			fmt.Println(buffer)
-			dec := gob.NewDecoder(network)
-			hb := &Heartbeat{}
-			err = dec.Decode(hb)
-			fmt.Println(hb)
+			conn.ReadFrom(buffer)
+			hb := &pb.Heartbeat{}
+			err := proto.Unmarshal(buffer, hb)
 			if err != nil {
-				log.Fatal("decode error:", err)
+				log.Fatal("Unmarshal error:", err)
 			}
-			fmt.Println(hb)
-			/*hbStatus := hb.GetStatus()
-			receivedMembershipList := hb.GetMembershipList()
+
+			receivedMembershipList := hb.Machine
 			UpdateMembershipLists(receivedMembershipList)
 
-			if(hbStatus == JOIN && id == entryMachineId) {
+			if(len(receivedMembershipList) == 1 && id == entryMachineId) {
 				// Send hb to new node with current membership list
-				entryHB := NewHeartbeat(id, memberList, UPDATE)
+				entryHB := ConstructPBHeartbeat()
 				newMachineAddr := getReceiverHost(id, 8000)
 				SendOnce(entryHB, newMachineAddr)
-			}*/
-			ln.Close()
+			}
+			conn.Close()
 		}
 	}
 }
@@ -139,8 +136,8 @@ func Cleanup(id int) {
 	}
 }
 
-func UpdateMembershipLists(receivedList MembersList) {
-	receivedNode := receivedList.GetHead()
+func UpdateMembershipLists(receivedList []*pb.Machine) {
+	/*receivedNode := receivedList.GetHead()
 	count := 0
 	for count < receivedList.Size() {
 		//get node info from their membership list
@@ -172,7 +169,8 @@ func UpdateMembershipLists(receivedList MembersList) {
 
 		receivedNode = receivedNode.Next()
 		count++
-	}
+	}*/
+	fmt.Println("UPDATE MEMBERSHIP LIST")
 }
 
 func GetIdentity() (string, int) {
@@ -203,23 +201,42 @@ func Gossip(port int, id int) {
 		//increment heartbeat counter for node sending hb
 		currNode.IncrementHBCounter()
 
-		hb := NewHeartbeat(id, memberList, UPDATE)
+		hb := ConstructPBHeartbeat()
 		SendOnce(hb, receiverAddr)
 	}
 }
 
-func SendOnce(hb *Heartbeat, addr string) {
+func SendOnce(hb *pb.Heartbeat, addr string) {
 	fmt.Printf("SENDONCE %x %s\n", hb, addr)
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		log.Fatal("Error connecting to server: ", err)
 	}
-	enc := gob.NewEncoder(conn)
-	e := enc.Encode(hb)
-	if e != nil {
-		log.Fatal("encode error:", e)
+	out, err := proto.Marshal(hb)
+	if err != nil {
+		log.Fatal("Marshal error:", err)
 	}
+	conn.Write(out)
 	conn.Close()
+}
+
+func ConstructPBHeartbeat() *pb.Heartbeat{
+	hb := &pb.Heartbeat{}
+	node := memberList.GetHead()
+	for node != nil {
+		machine := &pb.Machine{}
+		machineId := &pb.Machine_Id{}
+		machineId.Id = int32(node.GetId())
+		machineId.Timestamp = node.GetTimestamp().String()
+		machine.HbCounter = int32(node.GetHBCount())
+		machine.Status = int32(node.GetStatus())
+		machine.Id = machineId
+		hb.Machine = append(hb.Machine, machine)
+
+		node = node.Next()
+	}
+
+	return hb
 }
 
 func Join() {
@@ -231,7 +248,7 @@ func Join() {
 
 	// Get membership list from entry machine
 	if(id != entryMachineId) {
-		entryHB := NewHeartbeat(id, memberList, JOIN)
+		entryHB := ConstructPBHeartbeat()
 
 		// Send entry heartbeat to entry machine
 		entryMachineAddr := getReceiverHost(entryMachineId, 8000)
@@ -245,22 +262,16 @@ func Join() {
 
 		conn, err := net.ListenUDP("udp", udpAddr)
 		buffer := make([]byte, 1024)
-		n, _, _ := conn.ReadFromUDP(buffer)
-		if n == 0 {
-			fmt.Println("FUCK2")
-		}
-		network := bytes.NewBuffer(buffer)
-		dec := gob.NewDecoder(network)
-		var heartbeat Heartbeat
-		err = dec.Decode(&heartbeat)
+		conn.ReadFromUDP(buffer)
+		hb := &pb.Heartbeat{}
+		err = proto.Unmarshal(buffer, hb)
 		if err != nil {
-			log.Fatal("decode error:", err)
+			log.Fatal("Unmarshal error:", err)
 		}
 		conn.Close()
 
 		//merge membership lists
-		membershipList := heartbeat.GetMembershipList()
-		UpdateMembershipLists(membershipList)
+		UpdateMembershipLists(hb.Machine)
 	}
 
 	// start 2 threads for each connection, each listening to different port

@@ -31,3 +31,4 @@ func (hb *Heartbeat) GetMembershipList() MembersList {
 func (hb *Heartbeat) GetStatus() int {
 	return hb.Status
 }
+
