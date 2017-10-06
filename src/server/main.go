@@ -95,6 +95,9 @@ func Listen(port int) {
 			buffer := make([]byte, 1024)
 			conn.ReadFrom(buffer)
 			buffer = bytes.Trim(buffer, "\x00")
+			if(len(buffer) == 0){
+				continue
+			}
 			hb := &pb.Heartbeat{}
 			err := proto.Unmarshal(buffer, hb)
 			if err != nil {
