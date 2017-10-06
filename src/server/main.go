@@ -10,12 +10,9 @@ import (
 	"bufio"
 	"fmt"
 	. "membersList"
-	"encoding/gob"
 	"log"
-	"bytes"
 	"github.com/golang/protobuf/proto"
 	pb "heartbeat/heartbeat"
-	"heartbeat"
 )
 
 var memberList MembersList
