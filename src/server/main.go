@@ -94,6 +94,8 @@ func Listen(port int) {
 			if n == 0 {
 				fmt.Println("FUCK")
 			}
+			fmt.Println(n)
+			fmt.Println(buffer)
 			network := bytes.NewBuffer(buffer)
 			dec := gob.NewDecoder(network)
 			hb := &Heartbeat{}
