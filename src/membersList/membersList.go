@@ -9,7 +9,7 @@ import (
 type MembersList struct {
 	Head *Node
 	NodeMap map[int]*Node // Map of node id to node pointer
-	Mu sync.Mutex
+	mu sync.Mutex
 }
 
 
@@ -18,23 +18,23 @@ func NewMembershipList() MembersList{
 }
 
 func (m *MembersList) GetHead() *Node {
-	m.Mu.Lock()
+	m.mu.Lock()
 	head := m.Head
-	m.Mu.Unlock()
+	m.mu.Unlock()
 	return head
 }
 
 func (m *MembersList) GetNode(id int) *Node {
-	m.Mu.Lock()
+	m.mu.Lock()
 	node := m.NodeMap[id]
-	m.Mu.Unlock()
+	m.mu.Unlock()
 	return node
 }
 
 func (m *MembersList) Read() [] string {
 	var list []string
 
-	m.Mu.Lock()
+	m.mu.Lock()
 	node := m.Head
 	if(node != nil) {
 		for node.RNeighbor != nil && node.RNeighbor != m.Head {
@@ -54,15 +54,15 @@ func (m *MembersList) Read() [] string {
 			list = append(list, member)
 		}
 	}
-	m.Mu.Unlock()
+	m.mu.Unlock()
 
 	return list
 }
 
 func (m *MembersList) Size() int {
-	m.Mu.Lock()
+	m.mu.Lock()
 	nMap := m.NodeMap
-	m.Mu.Unlock()
+	m.mu.Unlock()
 
 	return len(nMap)
 }
@@ -70,7 +70,7 @@ func (m *MembersList) Size() int {
 func (m *MembersList) Insert(newNode *Node) {
 	fmt.Println("insert")
 	id := newNode.GetId()
-	m.Mu.Lock()
+	m.mu.Lock()
 	if(m.Head == nil) {
 		m.Head = newNode
 	} else{
@@ -97,11 +97,11 @@ func (m *MembersList) Insert(newNode *Node) {
 	}
 
 	m.NodeMap[id] = newNode
-	m.Mu.Unlock()
+	m.mu.Unlock()
 }
 
 func (m *MembersList) Remove(id int) {
-	m.Mu.Lock()
+	m.mu.Lock()
 	node := m.NodeMap[id]
 	
 	if(node != nil) {
@@ -123,5 +123,5 @@ func (m *MembersList) Remove(id int) {
 
 		delete(m.NodeMap, id)
 	}
-	m.Mu.Unlock()
+	m.mu.Unlock()
 }
