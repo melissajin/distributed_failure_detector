@@ -94,7 +94,7 @@ func Listen(port int) {
 		default:
 			buffer := make([]byte, 1024)
 			conn.ReadFrom(buffer)
-			buffer = bytes.TrimRight(buffer, "0")
+			buffer = bytes.Trim(buffer, "\x00")
 			hb := &pb.Heartbeat{}
 			err := proto.Unmarshal(buffer, hb)
 			fmt.Println(buffer)
@@ -263,7 +263,7 @@ func Join() {
 		conn, err := net.ListenUDP("udp", udpAddr)
 		buffer := make([]byte, 1024)
 		conn.ReadFromUDP(buffer)
-		buffer = bytes.TrimRight(buffer, "0")
+		buffer = bytes.Trim(buffer, "\x00")
 		hb := &pb.Heartbeat{}
 		err = proto.Unmarshal(buffer, hb)
 		fmt.Println(buffer)
