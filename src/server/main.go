@@ -223,7 +223,7 @@ func SendOnce(hb *Heartbeat, addr string) {
 	if e != nil {
 		log.Fatal("encode error:", e)
 	}
-	conn.Close()
+	//conn.Close()
 }
 
 func Join() {
