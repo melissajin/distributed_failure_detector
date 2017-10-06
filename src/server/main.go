@@ -101,6 +101,7 @@ func Listen(port int) {
 			dec := gob.NewDecoder(network)
 			hb := &Heartbeat{}
 			err = dec.Decode(hb)
+			fmt.Println(hb)
 			if err != nil {
 				log.Fatal("decode error:", err)
 			}
