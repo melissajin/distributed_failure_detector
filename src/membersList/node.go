@@ -1,8 +1,6 @@
 package membersList
 
-import (
-	"time"
-)
+import ()
 
 // Status of machine
 const (
