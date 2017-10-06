@@ -102,7 +102,7 @@ func Listen(port int) {
 			if err != nil {
 				log.Fatal("decode error:", err)
 			}
-
+			fmt.Println(hb)
 			hbStatus := hb.GetStatus()
 			receivedMembershipList := hb.GetMembershipList()
 			UpdateMembershipLists(receivedMembershipList)
