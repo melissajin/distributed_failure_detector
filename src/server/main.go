@@ -60,12 +60,16 @@ func Listen(port int) {
 	_, id := GetIdentity()
 	addr := getReceiverHost(id, port)
 
-	udpAddr,err := net.ResolveUDPAddr("udp",addr)
+	/*udpAddr,err := net.ResolveUDPAddr("udp",addr)
 	if err != nil {
 		log.Fatal("Error getting UDP address:", err)
 	}
 
-	conn, err := net.ListenUDP("udp", udpAddr)
+	conn, err := net.ListenUDP("udp", udpAddr)*/
+	ln, err := net.ListenPacket("udp", addr)
+	if err != nil {
+		log.Fatal("Error listening:", err)
+	}
 
 	for {
 		if(leave == true) {
@@ -88,19 +92,14 @@ func Listen(port int) {
 			go Cleanup(failedId)
 
 		default:
-			// accept and read heartbeat struct from server
 			buffer := make([]byte, 1024)
-			n, _, _ := conn.ReadFromUDP(buffer)
-			if n == 0 {
-				fmt.Println("FUCK")
-			}
-			fmt.Println(n)
+			ln.ReadFrom(buffer)
+			network := bytes.NewReader(buffer)
 			fmt.Println(buffer)
-			network := bytes.NewBuffer(buffer)
-			fmt.Println(network)
 			dec := gob.NewDecoder(network)
 			hb := &Heartbeat{}
 			err = dec.Decode(hb)
+			fmt.Println(hb)
 			if err != nil {
 				log.Fatal("decode error:", err)
 			}
@@ -115,7 +114,7 @@ func Listen(port int) {
 				newMachineAddr := getReceiverHost(id, 8000)
 				SendOnce(entryHB, newMachineAddr)
 			}*/
-			conn.Close()
+			ln.Close()
 		}
 	}
 }
