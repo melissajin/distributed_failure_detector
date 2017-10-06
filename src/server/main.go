@@ -66,7 +66,10 @@ func Listen(port int) {
 	}
 
 	conn, err := net.ListenUDP("udp", udpAddr)*/
-	conn, err := net.Listen("udp", addr)
+	ln, err := net.Listen("udp", addr)
+	if err != nil {
+		log.Fatal("Error listening:", err)
+	}
 
 	for {
 		if(leave == true) {
@@ -89,14 +92,11 @@ func Listen(port int) {
 			go Cleanup(failedId)
 
 		default:
-			// accept and read heartbeat struct from server
-			/*buffer := make([]byte, 1024)
-			n, _, _ := conn.ReadFromUDP(buffer)
-			if n == 0 {
-				fmt.Println("FUCK")
-			}*/
-			f, _ := conn.Accept()
-			dec := gob.NewDecoder(f)
+			conn, err := ln.Accept()
+			if err != nil {
+				log.Fatal("Error accepting:", err)
+			}
+			dec := gob.NewDecoder(conn)
 			hb := &Heartbeat{}
 			err = dec.Decode(hb)
 			if err != nil {
