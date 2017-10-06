@@ -13,15 +13,13 @@ type Node struct {
 	Id int
 	HbCounter int
 	Timestamp string
-	RNeighbor *Node
-	RrNeighbor *Node
-	LNeighbor *Node
-	LlNeighbor *Node
+	Right *Node
+	Left *Node
 	Status int
 }
 
-func NewNode(id int, hbCount int, timestamp string, rNeighbor *Node, rrNeighbor *Node, lNeighbor *Node, llNeighbor *Node, status int) * Node {
-	return &Node{ id, hbCount, timestamp, rNeighbor, rrNeighbor, lNeighbor, llNeighbor, status }
+func NewNode(id int, hbCount int, timestamp string) * Node {
+	return &Node{ id, hbCount, timestamp, nil, nil, ALIVE }
 }
 
 func (n *Node) GetId() int {
@@ -37,7 +35,21 @@ func (n *Node) GetTimestamp() string {
 }
 
 func (n *Node) GetNeighbors() (*Node, *Node, *Node, *Node) {
-	return n.RNeighbor, n.RrNeighbor, n.LNeighbor, n.LlNeighbor
+	r := n.Right
+	l := n.Left
+
+	var rr *Node
+	var ll *Node
+	rr = nil
+	ll = nil
+
+	if r != nil {
+		rr = r.Right
+	}
+	if l != nil {
+		ll = l.Left
+	}
+	return r, rr, l, ll
 }
 
 func (n *Node) GetStatus() int {
@@ -52,11 +64,9 @@ func (n *Node) SetHBCounter(hbCount int) {
 	n.HbCounter = hbCount
 }
 
-func (n *Node) SetNeighbors(rNeighbor *Node, rrNeighbor *Node, lNeighbor *Node, llNeighbor *Node) {
-	n.RNeighbor = rNeighbor
-	n.RrNeighbor = rrNeighbor
-	n.LNeighbor = lNeighbor
-	n.LlNeighbor = llNeighbor
+func (n *Node) SetNeighbors(right *Node, left *Node) {
+	n.Right = right
+	n.Left = left
 }
 
 func (n *Node) SetStatus(status int) {
@@ -64,5 +74,5 @@ func (n *Node) SetStatus(status int) {
 }
 
 func (n *Node) Next() *Node {
-	return n.RNeighbor
+	return n.Right
 }

@@ -36,13 +36,13 @@ func (m *MembersList) Read() [] string {
 	m.mu.Lock()
 	node := m.Head
 	if(node != nil) {
-		for node.RNeighbor != nil && node.RNeighbor != m.Head {
+		for node.Right != nil && node.Right != m.Head {
 			if(node.Status == ALIVE) {
 				id := strconv.Itoa(node.Id)
 				ts := node.Timestamp
 				member := "Machine Id: " + id + " Timestamp: " + ts
 				list = append(list, member)
-				node = node.RNeighbor
+				node = node.Right
 			}
 		}
 
@@ -71,27 +71,14 @@ func (m *MembersList) Insert(newNode *Node) {
 	m.mu.Lock()
 	if(m.Head == nil) {
 		m.Head = newNode
+		m.Head.Right = newNode
+		m.Head.Left = newNode
 	} else{
-		newNode.RNeighbor = m.Head.RNeighbor
-		newNode.RrNeighbor = m.Head.RrNeighbor
-		newNode.LNeighbor = m.Head
-		newNode.LlNeighbor = m.Head.LNeighbor
+		newNode.Left = m.Head.Left
+		newNode.Right = m.Head
 
-		if(m.Head.LNeighbor != nil) {
-			m.Head.LNeighbor.RrNeighbor = newNode
-		}
-
-		m.Head.RNeighbor = newNode
-		m.Head.RrNeighbor = newNode.RNeighbor
-
-		if(newNode.RNeighbor != nil) {
-			newNode.RNeighbor.LNeighbor = newNode
-			newNode.RNeighbor.LlNeighbor = m.Head
-		}
-
-		if(newNode.RrNeighbor != nil) {
-			newNode.RrNeighbor.LlNeighbor = newNode
-		}
+		m.Head.Left.Right = newNode
+		m.Head.Left = newNode
 	}
 
 	m.NodeMap[id] = newNode
@@ -105,19 +92,14 @@ func (m *MembersList) Remove(id int) {
 	if(node != nil) {
 		// Choose new head if we remove current head
 		if(node == m.Head) {
-			m.Head = node.RNeighbor // TODO: check if rNeighbor is nil
+			m.Head = m.Head.Right
 		}
 
-		node.RNeighbor.LNeighbor = node.LNeighbor
-		node.RNeighbor.LlNeighbor = node.LlNeighbor
-		node.LNeighbor.RrNeighbor = node.RrNeighbor
-		node.LNeighbor.RNeighbor = node.RNeighbor
-		node.LlNeighbor.RrNeighbor = node.RNeighbor
-		node.RrNeighbor.LlNeighbor = node.LlNeighbor
-		node.RrNeighbor = nil
-		node.RNeighbor = nil
-		node.LNeighbor = nil
-		node.LlNeighbor = nil
+		node.Left.Right = node.Right
+		node.Right.Left = node.Left
+
+		node.Left = nil
+		node.Right = nil
 
 		delete(m.NodeMap, id)
 	}

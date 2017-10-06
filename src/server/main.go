@@ -136,10 +136,10 @@ func getReceiverHost(machineNum int, portNum int) string {
 
 //Cleanup after clean up period
 func Cleanup(id int) {
-	time.After(cleanupTime)
+	time.Sleep(cleanupTime)
 	memberList.Remove(id)
 
-	// Kill goroutines for sending and recieving heartbeats
+	// Kill goroutines for sending and receiving heartbeats
 	_, currId := GetIdentity()
 	if(currId == id){
 		leave = true
@@ -147,9 +147,15 @@ func Cleanup(id int) {
 }
 
 func UpdateMembershipLists(receivedList []*pb.Machine) {
+	_, id := GetIdentity()
+
+	// Reset own membership list and take list from entry machine
+	if memberList.Size() == 1 {
+		memberList.Remove(id)
+	}
+
 	for i := 0; i < len(receivedList); i++ {
 		machine := receivedList[i]
-		//get node info from their membership list
 		receivedId := machine.GetId()
 		nodeId := int(receivedId.Id)
 		receivedStatus := int(machine.GetStatus())
@@ -158,10 +164,9 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 		currNode := memberList.GetNode(nodeId)
 
 		if currNode == nil && receivedStatus == ALIVE {
-			newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp, nil, nil, nil, nil, receivedStatus)
+			newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp)
 			memberList.Insert(newNode)
 		} else {
-			// currStatus := currNode.GetStatus()
 			currHBCount := currNode.GetHBCount()
 
 			if currHBCount < receivedHbCount {
@@ -253,7 +258,7 @@ func Join() {
 	_, id := GetIdentity()
 
 	// Create node and membership list and entry heartbeat
-	node := NewNode(id, 0, time.Now().String(), nil, nil, nil, nil, ALIVE)
+	node := NewNode(id, 0, time.Now().String())
 	memberList.Insert(node)
 
 	// Get membership list from entry machine
