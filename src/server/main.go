@@ -211,7 +211,10 @@ func Gossip(port int, id int) {
 
 func SendOnce(hb *Heartbeat, addr string) {
 	fmt.Printf("SENDONCE %x %s\n", hb, addr)
-	conn, err := net.Dial("udp", addr)
+	udpAddr, err := net.ResolveUDPAddr("udp", addr)
+	localAddr, err := net.ResolveUDPAddr("udp", ":8000")
+
+	conn, err := net.DialUDP("udp", localAddr, udpAddr)
 	if err != nil {
 		log.Fatal("Error connecting to server: ", err)
 	}
