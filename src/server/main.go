@@ -101,7 +101,7 @@ func Listen(port int) {
 			}
 
 			hb := &pb.Heartbeat{}
-			err := proto.Unmarshal(buffer, hb)
+			err = proto.Unmarshal(buffer, hb)
 			if err != nil {
 				log.Fatal("Unmarshal error:", err)
 			}
