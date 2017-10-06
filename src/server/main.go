@@ -252,8 +252,10 @@ func Join() {
 		entryMachineAddr := getReceiverHost(entryMachineId, 8000)
 		SendOnce(entryHB, entryMachineAddr)
 
+
+		receiverMachineAddr := getReceiverHost(2, 8000)
 		//receive heartbeat from entry machine and update memberList
-		udpAddr,err := net.ResolveUDPAddr("udp", entryMachineAddr)
+		udpAddr,err := net.ResolveUDPAddr("udp", receiverMachineAddr)
 		if err != nil {
 			log.Fatal("Error getting UDP address:", err)
 		}
