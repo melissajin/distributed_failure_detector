@@ -96,10 +96,8 @@ func Listen(port int) {
 			}
 			network := bytes.NewBuffer(buffer)
 			dec := gob.NewDecoder(network)
-			//var hb Heartbeat
-			//err = dec.Decode(&hb)
-			var hb string
-			err = dec.Decode(&hb)
+			hb := &Heartbeat{}
+			err = dec.Decode(hb)
 			if err != nil {
 				log.Fatal("decode error:", err)
 			}
@@ -215,9 +213,7 @@ func SendOnce(hb *Heartbeat, addr string) {
 		log.Fatal("Error connecting to server: ", err)
 	}
 	enc := gob.NewEncoder(conn)
-	//e := enc.Encode(hb)
-	heartbeat := "KSJGNEKAJBNKAJBSFJA"
-	e := enc.Encode(&heartbeat)
+	e := enc.Encode(hb)
 	if e != nil {
 		log.Fatal("encode error:", e)
 	}
