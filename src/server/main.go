@@ -66,7 +66,7 @@ func Listen(port int) {
 	}
 
 	conn, err := net.ListenUDP("udp", udpAddr)*/
-	ln, err := net.Listen("udp", addr)
+	ln, err := net.ListenPacket("udp", addr)
 	if err != nil {
 		log.Fatal("Error listening:", err)
 	}
@@ -92,11 +92,10 @@ func Listen(port int) {
 			go Cleanup(failedId)
 
 		default:
-			conn, err := ln.Accept()
-			if err != nil {
-				log.Fatal("Error accepting:", err)
-			}
-			dec := gob.NewDecoder(conn)
+			buffer := make([]byte, 1024)
+			ln.ReadFrom(buffer)
+			network := bytes.NewReader(buffer)
+			dec := gob.NewDecoder(network)
 			hb := &Heartbeat{}
 			err = dec.Decode(hb)
 			if err != nil {
@@ -113,7 +112,7 @@ func Listen(port int) {
 				newMachineAddr := getReceiverHost(id, 8000)
 				SendOnce(entryHB, newMachineAddr)
 			}*/
-			conn.Close()
+			ln.Close()
 		}
 	}
 }
