@@ -3,7 +3,6 @@ package membersList
 import (
 	"sync"
 	"strconv"
-	"fmt"
 )
 
 type MembersList struct {
@@ -64,7 +63,6 @@ func (m *MembersList) Size() int {
 func (m *MembersList) Insert(newNode *Node) {
 	id := newNode.GetId()
 	m.mu.Lock()
-	fmt.Println(m.Head)
 	if(m.Head == nil) {
 		m.Head = newNode
 		newNode.Right = m.Head
@@ -76,7 +74,6 @@ func (m *MembersList) Insert(newNode *Node) {
 		m.Head.Left.Right = newNode
 		m.Head.Left = newNode
 	}
-	fmt.Println(m.Head)
 	m.NodeMap[id] = newNode
 	m.mu.Unlock()
 }
@@ -86,12 +83,9 @@ func (m *MembersList) Remove(id int) {
 	node := m.NodeMap[id]
 	
 	if node != nil {
-		fmt.Println("REMOVE 1")
 		if len(m.NodeMap) == 1 {
-			fmt.Println("REMOVE 4")
 			m.Head = nil
 		} else {
-			fmt.Println("REMOVE 2")
 			// Choose new head if we remove current head
 			if node == m.Head {
 				m.Head = m.Head.Right
@@ -100,7 +94,6 @@ func (m *MembersList) Remove(id int) {
 			node.Left.Right = node.Right
 			node.Right.Left = node.Left
 		}
-		fmt.Println("REMOVE 3")
 		node.Left = nil
 		node.Right = nil
 
