@@ -35,22 +35,16 @@ func (m *MembersList) Read() [] string {
 
 	m.mu.Lock()
 	node := m.Head
-	if(node != nil) {
-		for node.Right != nil && node.Right != m.Head {
-			if(node.Status == ALIVE) {
-				id := strconv.Itoa(node.Id)
-				ts := node.Timestamp
-				member := "Machine Id: " + id + " Timestamp: " + ts
-				list = append(list, member)
-				node = node.Right
-			}
-		}
-
+	for node != nil {
 		if(node.Status == ALIVE) {
 			id := strconv.Itoa(node.Id)
 			ts := node.Timestamp
 			member := "Machine Id: " + id + " Timestamp: " + ts
 			list = append(list, member)
+		}
+		node = node.Next()
+		if node == m.Head {
+			break
 		}
 	}
 	m.mu.Unlock()

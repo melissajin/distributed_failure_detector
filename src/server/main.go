@@ -237,7 +237,8 @@ func ConstructPBHeartbeat() *pb.Heartbeat{
 	_, id := GetIdentity()
 	hb := &pb.Heartbeat{}
 	hb.Id = int32(id)
-	node := memberList.GetHead()
+	head := memberList.GetHead()
+	node := head
 	for node != nil {
 		machine := &pb.Machine{}
 		machineId := &pb.Machine_Id{}
@@ -249,6 +250,9 @@ func ConstructPBHeartbeat() *pb.Heartbeat{
 		hb.Machine = append(hb.Machine, machine)
 
 		node = node.Next()
+		if node == head {
+			break
+		}
 	}
 
 	return hb
@@ -260,7 +264,7 @@ func Join() {
 	// Create node and membership list and entry heartbeat
 	node := NewNode(id, 0, time.Now().String())
 	memberList.Insert(node)
-	fmt.Println("JOIN 1")
+	fmt.Printf("JOIN 1 %d", id)
 	// Get membership list from entry machine
 	if(id != entryMachineId) {
 		entryHB := ConstructPBHeartbeat()
