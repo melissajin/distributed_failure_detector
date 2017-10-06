@@ -95,7 +95,8 @@ func Listen(port int) {
 			if n == 0 {
 				fmt.Println("FUCK")
 			}*/
-			dec := gob.NewDecoder(conn)
+			f, _ := conn.Accept()
+			dec := gob.NewDecoder(f)
 			hb := &Heartbeat{}
 			err = dec.Decode(hb)
 			if err != nil {
