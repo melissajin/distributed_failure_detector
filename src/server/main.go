@@ -17,7 +17,7 @@ import (
 )
 
 var memberList MembersList
-var leave bool
+var leave chan bool
 
 const (
 	connections = 4
@@ -29,6 +29,7 @@ const (
 
 func main() {
 	memberList = NewMembershipList()
+	leave = make(chan bool)
 	_, id := GetIdentity()
 
 	// Create logfile
@@ -81,13 +82,13 @@ func Listen(port int) {
 	}
 
 	for {
-		if(leave == true) {
-			break
-		}
 		if(memberList.Size() < 2 && id != entryMachineId) {
 			continue
 		}
 		select {
+		case <- leave:
+			fmt.Println("Stop Listen")
+			break
 		case <- time.After(detectionTime):
 			currNode := memberList.GetNode(id)
 			failedId := getNeighbor(port-8000, currNode)
@@ -143,10 +144,10 @@ func Cleanup(id int) {
 	memberList.Remove(id)
 
 	// Kill goroutines for sending and receiving heartbeats
-	_, currId := GetIdentity()
-	if(currId == id){
-		leave = true
-	}
+	//_, currId := GetIdentity()
+	//if(currId == id){
+	//	leave <- true
+	//}
 }
 
 func UpdateMembershipLists(receivedList []*pb.Machine) {
@@ -199,24 +200,26 @@ func Gossip(port int, id int) {
 	for(memberList.Size() < 2) {}
 
 	for {
-		if(leave == true) {
+		select {
+		case <- leave:
+			fmt.Println("Stop Gossip")
 			break
+		default:
+			//send heartbeat after certain duration
+			time.Sleep(heartbeatInterval)
+
+			receiverId := getNeighbor(port - 8000, currNode)
+			if receiverId == 0 {
+				continue
+			}
+			receiverAddr := getReceiverHost(receiverId, port)
+
+			//increment heartbeat counter for node sending hb
+			currNode.IncrementHBCounter()
+
+			hb := ConstructPBHeartbeat()
+			SendOnce(hb, receiverAddr)
 		}
-
-		//send heartbeat after certain duration
-		time.Sleep(heartbeatInterval)
-
-		receiverId := getNeighbor(port - 8000, currNode)
-		if receiverId == 0 {
-			continue
-		}
-		receiverAddr := getReceiverHost(receiverId, port)
-
-		//increment heartbeat counter for node sending hb
-		currNode.IncrementHBCounter()
-
-		hb := ConstructPBHeartbeat()
-		SendOnce(hb, receiverAddr)
 	}
 }
 
@@ -303,7 +306,6 @@ func Join() {
 
 	// start 2 threads for each connection, each listening to different port
 	for i := 0; i < connections; i++ {
-		leave = false
 		go Listen(8000 + i)
 		go Gossip(8000 + i, id)
 	}
@@ -330,8 +332,12 @@ func getNeighbor(num int, currNode *Node) int {
 }
 
 func Leave() {
-	//remove self from membership list
 	_, id := GetIdentity()
+
+	// Kill goroutines for sending and receiving heartbeats
+	leave <- true
+
+	//remove self from membership list
 	leaveNode := memberList.GetNode(id)
 
 	leaveNode.SetStatus(LEAVE)
