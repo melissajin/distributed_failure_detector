@@ -79,54 +79,54 @@ func Listen(port int) {
 	if err != nil {
 		log.Fatal("Error listening:", err)
 	}
-
-	for {
-		if(memberList.Size() < 2 && id != entryMachineId) {
-			continue
-		}
-		select {
-		case <- leave:
-			fmt.Println("Stop Listen")
-			break
-		case <- time.After(detectionTime):
-			currNode := memberList.GetNode(id)
-			failedId := getNeighbor(port-8000, currNode)
-			if failedId == 0 {
+	ListenLoop:
+		for {
+			if(memberList.Size() < 2 && id != entryMachineId) {
 				continue
 			}
-			failedNode := memberList.GetNode(failedId)
-			failedNode.SetStatus(FAILED)
-			failedNode.IncrementHBCounter()
-			log.Printf("Machine %d failed", failedId)
-			go Cleanup(failedId)
+			select {
+			case <- leave:
+				fmt.Println("Stop Listen")
+				break ListenLoop
+			case <- time.After(detectionTime):
+				currNode := memberList.GetNode(id)
+				failedId := getNeighbor(port-8000, currNode)
+				if failedId == 0 {
+					continue
+				}
+				failedNode := memberList.GetNode(failedId)
+				failedNode.SetStatus(FAILED)
+				failedNode.IncrementHBCounter()
+				log.Printf("Machine %d failed", failedId)
+				go Cleanup(failedId)
 
-		default:
-			buffer := make([]byte, 1024)
-			conn, err := net.ListenUDP("udp", udpAddr)
-			conn.ReadFrom(buffer)
-			conn.Close()
+			default:
+				buffer := make([]byte, 1024)
+				conn, err := net.ListenUDP("udp", udpAddr)
+				conn.ReadFrom(buffer)
+				conn.Close()
 
-			buffer = bytes.Trim(buffer, "\x00")
-			if(len(buffer) == 0){
-				continue
-			}
-			hb := &pb.Heartbeat{}
-			err = proto.Unmarshal(buffer, hb)
-			if err != nil {
-				log.Fatal("Unmarshal error:", err)
-			}
+				buffer = bytes.Trim(buffer, "\x00")
+				if(len(buffer) == 0){
+					continue
+				}
+				hb := &pb.Heartbeat{}
+				err = proto.Unmarshal(buffer, hb)
+				if err != nil {
+					log.Fatal("Unmarshal error:", err)
+				}
 
-			receivedMembershipList := hb.GetMachine()
-			receivedMachindId := int(hb.GetId())
-			UpdateMembershipLists(receivedMembershipList)
-			if(len(receivedMembershipList) == 1 && id == entryMachineId) {
-				// Send hb to new node with current membership list
-				entryHB := ConstructPBHeartbeat()
-				newMachineAddr := getReceiverHost(receivedMachindId, 8000)
-				SendOnce(entryHB, newMachineAddr)
+				receivedMembershipList := hb.GetMachine()
+				receivedMachindId := int(hb.GetId())
+				UpdateMembershipLists(receivedMembershipList)
+				if(len(receivedMembershipList) == 1 && id == entryMachineId) {
+					// Send hb to new node with current membership list
+					entryHB := ConstructPBHeartbeat()
+					newMachineAddr := getReceiverHost(receivedMachindId, 8000)
+					SendOnce(entryHB, newMachineAddr)
+				}
 			}
 		}
-	}
 }
 
 func getReceiverHost(machineNum int, portNum int) string {
@@ -198,28 +198,29 @@ func Gossip(port int, id int) {
 	currNode := memberList.GetNode(id)
 	for(memberList.Size() < 2) {}
 
-	for {
-		select {
-		case <- leave:
-			fmt.Println("Stop Gossip")
-			break
-		default:
-			//send heartbeat after certain duration
-			time.Sleep(heartbeatInterval)
+	GossipLoop:
+		for {
+			select {
+			case <- leave:
+				fmt.Println("Stop Gossip")
+				break GossipLoop
+			default:
+				//send heartbeat after certain duration
+				time.Sleep(heartbeatInterval)
 
-			receiverId := getNeighbor(port - 8000, currNode)
-			if receiverId == 0 {
-				continue
+				receiverId := getNeighbor(port - 8000, currNode)
+				if receiverId == 0 {
+					continue
+				}
+				receiverAddr := getReceiverHost(receiverId, port)
+
+				//increment heartbeat counter for node sending hb
+				currNode.IncrementHBCounter()
+
+				hb := ConstructPBHeartbeat()
+				SendOnce(hb, receiverAddr)
 			}
-			receiverAddr := getReceiverHost(receiverId, port)
-
-			//increment heartbeat counter for node sending hb
-			currNode.IncrementHBCounter()
-
-			hb := ConstructPBHeartbeat()
-			SendOnce(hb, receiverAddr)
 		}
-	}
 }
 
 func SendOnce(hb *pb.Heartbeat, addr string) {
