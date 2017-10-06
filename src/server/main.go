@@ -60,6 +60,13 @@ func Listen(port int) {
 	_, id := GetIdentity()
 	addr := getReceiverHost(id, port)
 
+	udpAddr,err := net.ResolveUDPAddr("udp",addr)
+	if err != nil {
+		log.Fatal("Error getting UDP address:", err)
+	}
+
+	conn, err := net.ListenUDP("udp", udpAddr)
+
 	for {
 		if(leave == true) {
 			break
@@ -82,12 +89,11 @@ func Listen(port int) {
 
 		default:
 			// accept and read heartbeat struct from server
-			pc, err := net.ListenPacket("udp", addr)
-			if err != nil {
-				log.Fatal("Error when listening to port:", err)
-			}
 			buffer := make([]byte, 1024)
-			pc.ReadFrom(buffer)
+			n, _, _ := conn.ReadFromUDP(buffer)
+			if n == 0 {
+				fmt.Println("FUCK")
+			}
 			network := bytes.NewBuffer(buffer)
 			dec := gob.NewDecoder(network)
 			var hb Heartbeat
@@ -106,7 +112,7 @@ func Listen(port int) {
 				newMachineAddr := getReceiverHost(id, 8000)
 				SendOnce(entryHB, newMachineAddr)
 			} 
-			pc.Close()
+			conn.Close()
 		}
 	}
 }
@@ -231,9 +237,17 @@ func Join() {
 		SendOnce(entryHB, entryMachineAddr)
 
 		//receive heartbeat from entry machine and update memberList
-		pc, err := net.ListenPacket("udp", entryMachineAddr)
+		udpAddr,err := net.ResolveUDPAddr("udp", entryMachineAddr)
+		if err != nil {
+			log.Fatal("Error getting UDP address:", err)
+		}
+
+		conn, err := net.ListenUDP("udp", udpAddr)
 		buffer := make([]byte, 1024)
-		pc.ReadFrom(buffer)
+		n, _, _ := conn.ReadFromUDP(buffer)
+		if n == 0 {
+			fmt.Println("FUCK2")
+		}
 		network := bytes.NewBuffer(buffer)
 		dec := gob.NewDecoder(network)
 		var heartbeat Heartbeat
@@ -241,7 +255,7 @@ func Join() {
 		if err != nil {
 			log.Fatal("decode error:", err)
 		}
-		pc.Close()
+		conn.Close()
 
 		//merge membership lists
 		membershipList := heartbeat.GetMembershipList()
