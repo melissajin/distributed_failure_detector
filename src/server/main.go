@@ -196,7 +196,7 @@ func Gossip(port int, id int) {
 		}
 
 		//send heartbeat after certain duration
-		time.After(heartbeatInterval)
+		time.Sleep(heartbeatInterval)
 
 		fmt.Printf("GOSSIP 1 %d", port)
 		receiverId := getNeighbor(port - 8000, currNode)
