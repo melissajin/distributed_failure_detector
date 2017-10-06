@@ -85,15 +85,19 @@ func (m *MembersList) Remove(id int) {
 	m.mu.Lock()
 	node := m.NodeMap[id]
 	
-	if(node != nil) {
-		// Choose new head if we remove current head
-		if(node == m.Head) {
-			m.Head = m.Head.Right
+	if node != nil {
+		if m.Size() == 1 {
+			m.Head = nil
+		} else {
+			// Choose new head if we remove current head
+			if node == m.Head {
+				m.Head = m.Head.Right
+			}
+
+			node.Left.Right = node.Right
+			node.Right.Left = node.Left
 		}
-
-		node.Left.Right = node.Right
-		node.Right.Left = node.Left
-
+		
 		node.Left = nil
 		node.Right = nil
 
