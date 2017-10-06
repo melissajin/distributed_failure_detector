@@ -3,6 +3,7 @@ package membersList
 import (
 	"sync"
 	"strconv"
+	"fmt"
 )
 
 type MembersList struct {
@@ -63,6 +64,7 @@ func (m *MembersList) Size() int {
 func (m *MembersList) Insert(newNode *Node) {
 	id := newNode.GetId()
 	m.mu.Lock()
+	fmt.Println(m.Head)
 	if(m.Head == nil) {
 		m.Head = newNode
 		m.Head.Right = newNode
