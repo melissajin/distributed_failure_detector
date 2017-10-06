@@ -60,12 +60,13 @@ func Listen(port int) {
 	_, id := GetIdentity()
 	addr := getReceiverHost(id, port)
 
-	udpAddr,err := net.ResolveUDPAddr("udp",addr)
+	/*udpAddr,err := net.ResolveUDPAddr("udp",addr)
 	if err != nil {
 		log.Fatal("Error getting UDP address:", err)
 	}
 
-	conn, err := net.ListenUDP("udp", udpAddr)
+	conn, err := net.ListenUDP("udp", udpAddr)*/
+	conn, err := net.Listen("udp", addr)
 
 	for {
 		if(leave == true) {
