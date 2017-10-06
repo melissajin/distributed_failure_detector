@@ -65,8 +65,6 @@ func Listen(port int) {
 		log.Fatal("Error getting UDP address:", err)
 	}
 
-	conn, err := net.ListenUDP("udp", udpAddr)
-
 	if err != nil {
 		log.Fatal("Error listening:", err)
 	}
@@ -93,21 +91,26 @@ func Listen(port int) {
 
 		default:
 			buffer := make([]byte, 1024)
+			conn, err := net.ListenUDP("udp", udpAddr)
 			conn.ReadFrom(buffer)
+			conn.Close()
+
 			buffer = bytes.Trim(buffer, "\x00")
 			if(len(buffer) == 0){
 				continue
 			}
+
 			hb := &pb.Heartbeat{}
 			err := proto.Unmarshal(buffer, hb)
 			if err != nil {
 				log.Fatal("Unmarshal error:", err)
 			}
-			conn.Close()
+
 			receivedMembershipList := hb.GetMachine()
 			receivedMachindId := int(hb.GetId())
 			UpdateMembershipLists(receivedMembershipList)
 			fmt.Println(receivedMembershipList)
+
 			if(len(receivedMembershipList) == 1 && id == entryMachineId) {
 				// Send hb to new node with current membership list
 				entryHB := ConstructPBHeartbeat()
