@@ -153,7 +153,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 	if memberList.Size() == 1 && id != entryMachineId {
 		memberList.Remove(id)
 	}
-
+	fmt.Println("UPDATE 1")
 	for i := 0; i < len(receivedList); i++ {
 		machine := receivedList[i]
 		receivedId := machine.GetId()
@@ -162,11 +162,13 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 		receivedHbCount := int(machine.GetHbCounter())
 
 		currNode := memberList.GetNode(nodeId)
-
+		fmt.Println("UPDATE 2")
 		if currNode == nil && receivedStatus == ALIVE {
+			fmt.Println("UPDATE 3")
 			newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp)
 			memberList.Insert(newNode)
 		} else {
+			fmt.Println("UPDATE 4")
 			currHBCount := currNode.GetHBCount()
 
 			if currHBCount < receivedHbCount {

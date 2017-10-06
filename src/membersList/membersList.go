@@ -86,9 +86,11 @@ func (m *MembersList) Remove(id int) {
 	node := m.NodeMap[id]
 	
 	if node != nil {
+		fmt.Println("REMOVE 1")
 		if m.Size() == 1 {
 			m.Head = nil
 		} else {
+			fmt.Println("REMOVE 2")
 			// Choose new head if we remove current head
 			if node == m.Head {
 				m.Head = m.Head.Right
@@ -97,7 +99,7 @@ func (m *MembersList) Remove(id int) {
 			node.Left.Right = node.Right
 			node.Right.Left = node.Left
 		}
-		
+		fmt.Println("REMOVE 3")
 		node.Left = nil
 		node.Right = nil
 
