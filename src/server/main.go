@@ -97,11 +97,10 @@ func Listen(port int) {
 			buffer = bytes.Trim(buffer, "\x00")
 			hb := &pb.Heartbeat{}
 			err := proto.Unmarshal(buffer, hb)
-			fmt.Println(buffer)
 			if err != nil {
 				log.Fatal("Unmarshal error:", err)
 			}
-
+			conn.Close()
 			receivedMembershipList := hb.Machine
 			UpdateMembershipLists(receivedMembershipList)
 
@@ -111,7 +110,6 @@ func Listen(port int) {
 				newMachineAddr := getReceiverHost(2, 8001)
 				SendOnce(entryHB, newMachineAddr)
 			}
-			conn.Close()
 		}
 	}
 }
@@ -271,7 +269,6 @@ func Join() {
 		buffer = bytes.Trim(buffer, "\x00")
 		hb := &pb.Heartbeat{}
 		err = proto.Unmarshal(buffer, hb)
-		fmt.Println(buffer)
 		if err != nil {
 			log.Fatal("Unmarshal2 error:", err)
 		}
