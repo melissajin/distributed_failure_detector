@@ -194,6 +194,10 @@ func Gossip(port int, id int) {
 		if(leave == true) {
 			break
 		}
+
+		//send heartbeat after certain duration
+		time.After(heartbeatInterval)
+
 		fmt.Printf("GOSSIP 1 %d", port)
 		receiverId := getNeighbor(port - 8000, currNode)
 		if receiverId == 0 {
@@ -201,9 +205,6 @@ func Gossip(port int, id int) {
 		}
 		fmt.Println("GOSSIP 2")
 		receiverAddr := getReceiverHost(receiverId, port)
-
-		//send heartbeat after certain duration
-		time.After(heartbeatInterval)
 
 		//increment heartbeat counter for node sending hb
 		currNode.IncrementHBCounter()
