@@ -93,7 +93,7 @@ func Listen(port int) {
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
 				//conn.SetReadDeadline(time.Now().Add(detectionTime))
-
+				fmt.Println("ERROR: ", err, conn)
 				_ , _, err = conn.ReadFrom(buffer)
 				conn.Close()
 				//if err != nil {
