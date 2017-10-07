@@ -101,21 +101,25 @@ func Listen(port int, wg *sync.WaitGroup) {
 				_ , _, err = conn.ReadFrom(buffer)
 				conn.Close()
 				if err != nil {
-					continue
-				//	fmt.Println("ERROR:", err)
-				//	currNode := memberList.GetNode(id)
-				//	fmt.Println(currNode, memberList, id)
-				//	failedId := getNeighbor(port-8000, currNode)
-				//
-				//	if failedId == 0 {
-				//		continue
-				//	}
-				//	failedNode := memberList.GetNode(failedId)
-				//	failedNode.SetStatus(FAILED)
-				//	failedNode.IncrementHBCounter()
-				//	log.Printf("Machine %d failed at port %d", failedId, port)
-				//	go Cleanup(failedId)
-				//	continue
+					log.Println("ERROR READING FROM CONNECTION: ", err)
+					if err, ok := err.(net.Error); ok && err.Timeout() {
+						fmt.Println("ERROR:", err)
+						currNode := memberList.GetNode(id)
+						fmt.Println(currNode, memberList, id)
+						failedId := getNeighbor(port-8000, currNode)
+
+						if failedId == 0 {
+							continue
+						}
+						failedNode := memberList.GetNode(failedId)
+						failedNode.SetStatus(FAILED)
+						failedNode.IncrementHBCounter()
+						log.Printf("Machine %d failed at port %d", failedId, port)
+						go Cleanup(failedId)
+						continue
+					} else {
+						continue
+					}
 				}
 
 				buffer = bytes.Trim(buffer, "\x00")
