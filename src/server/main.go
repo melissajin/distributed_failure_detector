@@ -81,13 +81,12 @@ func Listen(port int, wg *sync.WaitGroup) {
 	}
 
 	conn, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		fmt.Println("ERROR: ", err, conn)
+	}
 
 	ListenLoop:
 		for {
-			//if memberList.Size() < 2 && !Contains(entryMachineIds, id) {
-			//	continue
-			//}
-
 			select {
 			case <- leave:
 				conn.Close()
@@ -95,9 +94,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 			default:
 				buffer := make([]byte, 1024)
 
-				if err != nil {
-					fmt.Println("ERROR: ", err, conn)
-				}
 				_ , _, err = conn.ReadFrom(buffer)
 				buffer = bytes.Trim(buffer, "\x00")
 
@@ -139,7 +135,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 
 				// TODO: only set deadline after machine joins
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
-				
+
 				//receivedMachineId := int(hb.GetId())
 				//if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
 				//	// Send hb to new node with current membership list
