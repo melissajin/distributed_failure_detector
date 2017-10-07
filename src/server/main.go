@@ -100,10 +100,8 @@ func Listen(port int, wg *sync.WaitGroup) {
 				// TODO: set startup = false if machine leaves
 				if startup == true {
 					time.Sleep(startupTime)
-				} else {
-					continue
 				}
-				
+
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				if err != nil {
 					fmt.Println("ERROR: ", err, conn)
