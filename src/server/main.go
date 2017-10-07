@@ -283,6 +283,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 }
 
 func SendOnce(hb *pb.Heartbeat, addr string) {
+	log.Println("Send once", addr)
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		log.Fatal("Error connecting to server: ", err)
