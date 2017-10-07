@@ -134,7 +134,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
 					// Send hb to new node with current membership list
 					entryHB := ConstructPBHeartbeat()
-					newMachineAddr := getReceiverHost(receivedMachineId, 8000)
+					newMachineAddr := getReceiverHost(receivedMachineId, 8000+id)
 					log.Println(id, " entry send to ", newMachineAddr)
 					SendOnce(entryHB, newMachineAddr)
 				}
