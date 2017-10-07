@@ -92,26 +92,26 @@ func Listen(port int) {
 			default:
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
-				conn.SetReadDeadline(time.Now().Add(detectionTime))
+				//conn.SetReadDeadline(time.Now().Add(detectionTime))
 
 				_ , _, err = conn.ReadFrom(buffer)
 				conn.Close()
-				if err != nil {
-					fmt.Println("ERROR:", err)
-					currNode := memberList.GetNode(id)
-					fmt.Println(currNode, memberList, id)
-					failedId := getNeighbor(port-8000, currNode)
-
-					if failedId == 0 {
-						continue
-					}
-					failedNode := memberList.GetNode(failedId)
-					failedNode.SetStatus(FAILED)
-					failedNode.IncrementHBCounter()
-					log.Printf("Machine %d failed at port %d", failedId, port)
-					go Cleanup(failedId)
-					continue
-				}
+				//if err != nil {
+				//	fmt.Println("ERROR:", err)
+				//	currNode := memberList.GetNode(id)
+				//	fmt.Println(currNode, memberList, id)
+				//	failedId := getNeighbor(port-8000, currNode)
+				//
+				//	if failedId == 0 {
+				//		continue
+				//	}
+				//	failedNode := memberList.GetNode(failedId)
+				//	failedNode.SetStatus(FAILED)
+				//	failedNode.IncrementHBCounter()
+				//	log.Printf("Machine %d failed at port %d", failedId, port)
+				//	go Cleanup(failedId)
+				//	continue
+				//}
 
 				buffer = bytes.Trim(buffer, "\x00")
 				if(len(buffer) == 0){
@@ -130,6 +130,7 @@ func Listen(port int) {
 					// Send hb to new node with current membership list
 					entryHB := ConstructPBHeartbeat()
 					newMachineAddr := getReceiverHost(receivedMachindId, 8000)
+					log.Println(id, " entry send to ", newMachineAddr, entryHB)
 					SendOnce(entryHB, newMachineAddr)
 				}
 			}
@@ -226,6 +227,7 @@ func Gossip(port int, id int) {
 				currNode.IncrementHBCounter()
 
 				hb := ConstructPBHeartbeat()
+				log.Println(id, " gossip to ", receiverAddr, hb)
 				SendOnce(hb, receiverAddr)
 			}
 		}
@@ -283,6 +285,7 @@ func Join() {
 
 		// Send entry heartbeat to entry machine
 		entryMachineAddr := getReceiverHost(entryMachineId, 8000)
+		log.Println(id, " ask to join ", entryMachineAddr, entryHB)
 		SendOnce(entryHB, entryMachineAddr)
 
 		//receive heartbeat from entry machine and update memberList
