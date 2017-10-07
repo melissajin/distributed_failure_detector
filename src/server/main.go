@@ -359,14 +359,14 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	SendOnce(entryHB, entryMachineAddr)
 
 	//receive heartbeat from entry machine and update memberList
-	receiverMachineAddr := getReceiverHost(id, 8000)
+	receiverMachineAddr := getReceiverHost(id, 8000+entryId)
 	udpAddr,err := net.ResolveUDPAddr("udp", receiverMachineAddr)
 	if err != nil {
 		log.Fatal("Error getting UDP address:", err)
 	}
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
-		log.Println("Error listening to addr: ", udpAddr, err)
+		log.Println("Error listening to addr: ", receiverMachineAddr, err)
 		return
 	}
 	//defer conn.Close()
@@ -376,7 +376,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	_, _, err = conn.ReadFromUDP(buffer)
 	conn.Close()
 	if err != nil {
-		log.Println("Error reading from UPD buffer", udpAddr, err)
+		log.Println("Error reading from UPD buffer", receiverMachineAddr, err)
 		return
 	}
 	buffer = bytes.Trim(buffer, "\x00")
