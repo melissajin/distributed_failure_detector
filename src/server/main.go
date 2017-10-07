@@ -360,19 +360,21 @@ func GetCurrentMembers(entryId int) {
 	if err != nil {
 		log.Fatal("Error getting UDP address:", err)
 	}
-
+	fmt.Println("GetCurrentMembers 1")
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
 		log.Fatal("Error listening to addr: ", err)
 	}
-
+	fmt.Println("GetCurrentMembers 2")
 	conn.SetReadDeadline(time.Now().Add(detectionTime))
+	fmt.Println("GetCurrentMembers 3")
 	buffer := make([]byte, 1024)
 	_, _, err = conn.ReadFromUDP(buffer)
 	if err != nil {
+		fmt.Println("GetCurrentMembers 5", err)
 		return
 	}
-
+	fmt.Println("GetCurrentMembers 4")
 	buffer = bytes.Trim(buffer, "\x00")
 	hb := &pb.Heartbeat{}
 	err = proto.Unmarshal(buffer, hb)
