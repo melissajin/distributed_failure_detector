@@ -340,6 +340,7 @@ func Join() {
 	}
 	wg.Wait()
 
+	log.Println("Last cleanup")
 	Cleanup(id)
 }
 
