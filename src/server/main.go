@@ -92,7 +92,6 @@ func Listen(port int) {
 			default:
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
-				fmt.Println(conn, err)
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 
 				_ , _, err = conn.ReadFrom(buffer)
@@ -100,12 +99,10 @@ func Listen(port int) {
 				if err != nil {
 					currNode := memberList.GetNode(id)
 					failedId := getNeighbor(port-8000, currNode)
-					fmt.Println("FAILED 0", failedId)
 
 					if failedId == 0 {
 						continue
 					}
-					fmt.Println("FAILED 1")
 					failedNode := memberList.GetNode(failedId)
 					failedNode.SetStatus(FAILED)
 					failedNode.IncrementHBCounter()
@@ -113,21 +110,6 @@ func Listen(port int) {
 					go Cleanup(failedId)
 					continue
 				}
-				//if err, ok := err.(net.Error); ok && err.Timeout() {
-				//	// Didn't recieve heartbeat
-				//	currNode := memberList.GetNode(id)
-				//	failedId := getNeighbor(port-8000, currNode)
-				//	if failedId == 0 {
-				//		continue
-				//	}
-				//	fmt.Println("FAILED 1")
-				//	failedNode := memberList.GetNode(failedId)
-				//	failedNode.SetStatus(FAILED)
-				//	failedNode.IncrementHBCounter()
-				//	log.Printf("Machine %d failed", failedId)
-				//	go Cleanup(failedId)
-				//	continue
-				//}
 
 				buffer = bytes.Trim(buffer, "\x00")
 				if(len(buffer) == 0){
