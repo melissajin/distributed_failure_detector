@@ -155,7 +155,7 @@ func Cleanup(id int) {
 		close(leave)
 
 		// Reset membership list
-		memberList = MembersList{}
+		memberList = NewMembershipList()
 	} else {
 		memberList.Remove(id)
 	}
