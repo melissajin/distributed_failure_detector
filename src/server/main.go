@@ -108,7 +108,9 @@ func Listen(port int, wg *sync.WaitGroup) {
 						continue
 					}
 				}
-				/*if err != nil {
+
+				// Timeout error, machine failed
+				if err != nil {
 					log.Println("ERROR READING FROM CONNECTION: ", err)
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						currNode := memberList.GetNode(id)
@@ -128,7 +130,8 @@ func Listen(port int, wg *sync.WaitGroup) {
 					} else {
 						continue
 					}
-				}*/
+				}
+
 				buffer = bytes.Trim(buffer, "\x00")
 				if(len(buffer) == 0){
 					continue
