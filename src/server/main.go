@@ -355,7 +355,7 @@ func GetCurrentMembers(entryId int) {
 	SendOnce(entryHB, entryMachineAddr)
 
 	//receive heartbeat from entry machine and update memberList
-	receiverMachineAddr := getReceiverHost(entryId, 8000)
+	receiverMachineAddr := getReceiverHost(id, 8000)
 	udpAddr,err := net.ResolveUDPAddr("udp", receiverMachineAddr)
 	if err != nil {
 		log.Fatal("Error getting UDP address:", err)
