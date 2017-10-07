@@ -234,6 +234,7 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 			break
 		}
 	}
+	log.Println("Merge complete", A)
 	return A
 }
 
@@ -405,7 +406,7 @@ func getNeighbor(num int, currNode *Node) int {
 	} else if(num == 3) {
 		neighbor = ll
 	}
-	log.Println("GetNeighbor", neighbor)
+	//log.Println("GetNeighbor", neighbor)
 	if neighbor != nil && neighbor.GetId() != id {
 		return neighbor.GetId()
 	} else {
