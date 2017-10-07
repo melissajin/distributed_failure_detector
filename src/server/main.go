@@ -140,7 +140,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 				}
 			}
 		}
-	log.Println("Listen end", port)
 }
 
 func Contains(arr []int, num int) bool {
@@ -188,7 +187,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 		newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp, receivedStatus)
 		recievedMemList.Insert(newNode)
 	}
-	log.Println("Updating membership list", recievedMemList.Size(), memberList.Size())
+
 	if memberList.Size() == 1 && recievedMemList.Size() != 1 {
 		memberList = MergeLists(recievedMemList, memberList)
 	} else {
@@ -279,7 +278,6 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 				SendOnce(hb, receiverAddr)
 			}
 		}
-	log.Println("Gossip End", port)
 }
 
 func SendOnce(hb *pb.Heartbeat, addr string) {
@@ -408,7 +406,7 @@ func getNeighbor(num int, currNode *Node) int {
 	} else if(num == 3) {
 		neighbor = ll
 	}
-	//log.Println("GetNeighbor", neighbor)
+
 	if neighbor != nil && neighbor.GetId() != id {
 		return neighbor.GetId()
 	} else {
@@ -422,7 +420,6 @@ func Leave() {
 	//remove self from membership list
 	leaveNode := memberList.GetNode(id)
 	leaveNode.SetStatus(LEAVE)
-	//leaveNode.IncrementHBCounter()
 
 	log.Printf("Machine %d left", id)
 	// Kill goroutines for sending and receiving heartbeats
