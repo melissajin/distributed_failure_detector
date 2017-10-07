@@ -108,7 +108,7 @@ func Listen(port int) {
 					failedNode := memberList.GetNode(failedId)
 					failedNode.SetStatus(FAILED)
 					failedNode.IncrementHBCounter()
-					log.Printf("Machine %d failed", failedId)
+					log.Printf("Machine %d failed at port %d", failedId, port)
 					go Cleanup(failedId)
 					continue
 				}
@@ -147,7 +147,6 @@ func getReceiverHost(machineNum int, portNum int) string {
 //Cleanup after clean up period
 func Cleanup(id int) {
 	time.Sleep(cleanupTime)
-	fmt.Println("CLEANUP")
 
 	memberList.Remove(id)
 
