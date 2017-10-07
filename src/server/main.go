@@ -361,11 +361,12 @@ func GetCurrentMembers(entryId int) {
 		log.Fatal("Error getting UDP address:", err)
 	}
 	conn, err := net.ListenUDP("udp", udpAddr)
-	defer conn.Close()
 	if err != nil {
 		log.Println("Error listening to addr: ", err)
 		return
 	}
+	defer conn.Close()
+
 	conn.SetReadDeadline(time.Now().Add(detectionTime))
 	buffer := make([]byte, 1024)
 	_, _, err = conn.ReadFromUDP(buffer)
