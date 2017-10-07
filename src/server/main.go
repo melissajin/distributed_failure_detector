@@ -24,8 +24,8 @@ var entryMachineIds = []int{1,2,3,4,5}
 const (
 	connections = 4
 	cleanupTime = time.Second * 6
-	detectionTime = time.Second * 1
-	heartbeatInterval = time.Millisecond * 500
+	detectionTime = time.Second * 2
+	heartbeatInterval = time.Millisecond * 200
 )
 
 func main() {
@@ -399,6 +399,45 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 func getNeighbor(num int, currNode *Node) int {
 	r, rr, l, ll := currNode.GetNeighbors()
 	_, id := GetIdentity()
+
+	// 1 Node
+	if r.GetId() == id {
+		return 0
+	}
+
+	// 2 Nodes
+	if r.GetId() == l.GetId() {
+		if num == 0 {
+			return r.GetId()
+		} else {
+			return 0
+		}
+	}
+
+	// 3 Nodes
+	if rr.GetId() == l.GetId() {
+		if num == 0 {
+			return r.GetId()
+		} else if num == 1 {
+			return l.GetId()
+		} else {
+			return 0
+		}
+	}
+
+	// 4 Nodes
+	if rr.GetId() == ll.GetId() {
+		if num == 0 {
+			return r.GetId()
+		} else if num == 1 {
+			return l.GetId()
+		} else if num == 2 {
+			return rr.GetId()
+		} else {
+			return 0
+		}
+	}
+
 	var neighbor *Node
 	if(num == 0) {
 		neighbor = rr
