@@ -25,7 +25,7 @@ const (
 	connections = 4
 	cleanupTime = time.Second * 6
 	detectionTime = time.Second * 2
-	heartbeatInterval = time.Millisecond * 100
+	heartbeatInterval = time.Millisecond * 500
 )
 
 func main() {
@@ -324,21 +324,22 @@ func Join() {
 	node := NewNode(id, 0, time.Now().String(), ALIVE)
 	memberList.Insert(node)
 
-	var wg sync.WaitGroup
-	wg.Add(5)
+	var wg1 sync.WaitGroup
+	wg1.Add(5)
 	// Get membership list from one entry machine
 	for i := 0; i < len(entryMachineIds); i++ {
-		go GetCurrentMembers(entryMachineIds[i], &wg)
+		go GetCurrentMembers(entryMachineIds[i], &wg1)
 	}
-	wg.Wait()
+	wg1.Wait()
 
-	wg.Add(3)
+	var wg2 sync.WaitGroup
+	wg2.Add(8)
 	// start 2 threads for each connection, each listening to different port
 	for i := 0; i < connections; i++ {
-		go Listen(8000 + i, &wg)
-		go Gossip(8000 + i, id, &wg)
+		go Listen(8000 + i, &wg2)
+		go Gossip(8000 + i, id, &wg2)
 	}
-	wg.Wait()
+	wg2.Wait()
 
 	log.Println("Last cleanup")
 	Cleanup(id)
