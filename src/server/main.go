@@ -94,14 +94,20 @@ func Listen(port int, wg *sync.WaitGroup) {
 				break ListenLoop
 			default:
 				buffer := make([]byte, 1024)
-
-				// TODO: only set deadline after machine joins
-				conn.SetReadDeadline(time.Now().Add(detectionTime))
-
-				_ , _, err = conn.ReadFrom(buffer)
-				buffer = bytes.Trim(buffer, "\x00")
-				if err != nil {
+				currNode := memberList.GetNode(id)
+				if currNode == nil {
 					continue
+				}
+				neighbor := getNeighbor(port-8000, currNode)
+				// TODO: only set deadline after machine joins
+				if(neighbor != 0) {
+					conn.SetReadDeadline(time.Now().Add(detectionTime))
+
+					_ , _, err = conn.ReadFrom(buffer)
+					buffer = bytes.Trim(buffer, "\x00")
+					if err != nil {
+						continue
+					}
 				}
 				/*if err != nil && !(len(buffer) > 0) {
 					log.Println("ERROR READING FROM CONNECTION: ", err)
