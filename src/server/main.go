@@ -388,6 +388,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 		for {
 			select {
 			case <- leave:
+				log.Println("BREAK OUT OF ENTRY LOOP")
 				break EntryLoop
 
 			default:
@@ -395,7 +396,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				conn, err := net.ListenUDP("udp", udpAddr)
 
 				// TODO: might need
-				//conn.SetReadDeadline(time.Now().Add(detectionTime))
+				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				_ , _, err = conn.ReadFrom(buffer)
 				conn.Close()
 				if err != nil {
