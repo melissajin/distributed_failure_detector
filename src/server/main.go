@@ -90,6 +90,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 			select {
 			case <- leave:
 				conn.Close()
+				log.Println("Break out of listen for port: ", port)
 				break ListenLoop
 			default:
 				buffer := make([]byte, 1024)
@@ -279,6 +280,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 			for(memberList.Size() < 2) {}
 			select {
 			case <- leave:
+				log.Println("Break out of gossip for port: ", port)
 				break GossipLoop
 			default:
 				//send heartbeat after certain duration
