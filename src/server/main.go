@@ -14,6 +14,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	pb "heartbeat/heartbeat"
 	"bytes"
+	"sync"
 )
 
 var memberList MembersList
@@ -67,7 +68,9 @@ func main() {
 	}
 }
 
-func Listen(port int) {
+func Listen(port int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	_, id := GetIdentity()
 	addr := getReceiverHost(id, port)
 
@@ -152,12 +155,8 @@ func Cleanup(id int) {
 	_, ownId := GetIdentity()
 
 	if(id == ownId) {
-		// Kill goroutines for sending and receiving heartbeats
-		close(leave)
 		// Reset membership list
-		time.Sleep(cleanupTime)
 		memberList = NewMembershipList()
-		fmt.Println(memberList)
 	} else {
 		memberList.Remove(id)
 	}
@@ -215,7 +214,9 @@ func GetIdentity() (string, int) {
 	return host, id
 }
 
-func Gossip(port int, id int) {
+func Gossip(port int, id int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	currNode := memberList.GetNode(id)
 	for(memberList.Size() < 2) {}
 
@@ -327,11 +328,17 @@ func Join() {
 		log.Printf("Machine %d joined", id)
 	}
 
+
+	var wg sync.WaitGroup
+	wg.Add(8)
 	// start 2 threads for each connection, each listening to different port
 	for i := 0; i < connections; i++ {
-		go Listen(8000 + i)
-		go Gossip(8000 + i, id)
+		go Listen(8000 + i, &wg)
+		go Gossip(8000 + i, id, &wg)
 	}
+	wg.Wait()
+
+	Cleanup(id)
 }
 
 func getNeighbor(num int, currNode *Node) int {
@@ -363,7 +370,8 @@ func Leave() {
 	leaveNode.SetStatus(LEAVE)
 
 	log.Printf("Machine %d left", id)
-	go Cleanup(id)
+	// Kill goroutines for sending and receiving heartbeats
+	close(leave)
 }
 
 func printMemberList() {
