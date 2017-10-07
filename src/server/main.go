@@ -97,6 +97,7 @@ func Listen(port int) {
 				_ , _, err = conn.ReadFrom(buffer)
 				conn.Close()
 				if err != nil {
+					fmt.Println("ERROR:", err)
 					currNode := memberList.GetNode(id)
 					fmt.Println(currNode, memberList, id)
 					failedId := getNeighbor(port-8000, currNode)
