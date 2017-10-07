@@ -20,11 +20,13 @@ import (
 var memberList MembersList
 var leave chan bool
 var entryMachineIds = []int{1,2,3,4,5}
+var startup = false
 
 const (
 	connections = 4
 	cleanupTime = time.Second * 6
 	detectionTime = time.Second * 2
+	startupTime = time.Second * 2
 	heartbeatInterval = time.Millisecond * 200
 )
 
@@ -94,6 +96,14 @@ func Listen(port int, wg *sync.WaitGroup) {
 			default:
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
+
+				// TODO: set startup = false if machine leaves
+				if startup == true {
+					time.Sleep(startupTime)
+				} else {
+					continue
+				}
+				
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				if err != nil {
 					fmt.Println("ERROR: ", err, conn)
@@ -139,6 +149,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 					newMachineAddr := getReceiverHost(receivedMachineId, 8000+id)
 					log.Println(id, " entry send to ", newMachineAddr)
 					SendOnce(entryHB, newMachineAddr)
+					startup = true
 				}
 			}
 		}
