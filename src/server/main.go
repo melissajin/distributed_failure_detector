@@ -87,7 +87,6 @@ func Listen(port int) {
 
 			select {
 			case <- leave:
-				fmt.Println("Stop Listen")
 				break ListenLoop
 			default:
 				buffer := make([]byte, 1024)
@@ -154,8 +153,9 @@ func Cleanup(id int) {
 
 	if(id == ownId) {
 		// Kill goroutines for sending and receiving heartbeats
+		fmt.Println("FUCKFUCK")
 		close(leave)
-
+		fmt.Println("FUCK")
 		// Reset membership list
 		memberList = NewMembershipList()
 	} else {
@@ -223,7 +223,6 @@ func Gossip(port int, id int) {
 		for {
 			select {
 			case <- leave:
-				fmt.Println("Stop Gossip")
 				break GossipLoop
 			default:
 				//send heartbeat after certain duration
