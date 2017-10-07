@@ -323,13 +323,15 @@ func Join() {
 	node := NewNode(id, 0, time.Now().String(), ALIVE)
 	memberList.Insert(node)
 
+	var wg sync.WaitGroup
+	wg.Add(5)
 	// Get membership list from one entry machine
 	for i := 0; i < len(entryMachineIds); i++ {
-		go GetCurrentMembers(entryMachineIds[i])
+		go GetCurrentMembers(entryMachineIds[i], &wg)
 	}
+	wg.Wait()
 
-	var wg sync.WaitGroup
-	wg.Add(8)
+	wg.Add(3)
 	// start 2 threads for each connection, each listening to different port
 	for i := 0; i < connections; i++ {
 		go Listen(8000 + i, &wg)
@@ -341,7 +343,9 @@ func Join() {
 	Cleanup(id)
 }
 
-func GetCurrentMembers(entryId int) {
+func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	_, id := GetIdentity()
 	if id == entryId {
 		return
@@ -365,11 +369,12 @@ func GetCurrentMembers(entryId int) {
 		log.Println("Error listening to addr: ", err)
 		return
 	}
-	defer conn.Close()
+	//defer conn.Close()
 
 	conn.SetReadDeadline(time.Now().Add(detectionTime))
 	buffer := make([]byte, 1024)
 	_, _, err = conn.ReadFromUDP(buffer)
+	conn.Close()
 	if err != nil {
 		return
 	}
