@@ -95,6 +95,9 @@ func Listen(port int, wg *sync.WaitGroup) {
 			default:
 				buffer := make([]byte, 1024)
 
+				// TODO: only set deadline after machine joins
+				conn.SetReadDeadline(time.Now().Add(detectionTime))
+
 				_ , _, err = conn.ReadFrom(buffer)
 				buffer = bytes.Trim(buffer, "\x00")
 				if err != nil {
@@ -134,9 +137,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 
 				receivedMembershipList := hb.GetMachine()
 				UpdateMembershipLists(receivedMembershipList)
-
-				// TODO: only set deadline after machine joins
-				conn.SetReadDeadline(time.Now().Add(detectionTime))
 
 				//receivedMachineId := int(hb.GetId())
 				//if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
