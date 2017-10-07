@@ -96,6 +96,7 @@ func Listen(port int) {
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 
 				_ , _, err = conn.ReadFrom(buffer)
+				conn.Close()
 				if err != nil {
 					currNode := memberList.GetNode(id)
 					failedId := getNeighbor(port-8000, currNode)
@@ -127,8 +128,6 @@ func Listen(port int) {
 				//	go Cleanup(failedId)
 				//	continue
 				//}
-
-				conn.Close()
 
 				buffer = bytes.Trim(buffer, "\x00")
 				if(len(buffer) == 0){
