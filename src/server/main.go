@@ -33,7 +33,7 @@ func main() {
 
 	// Create logfile
 	logfileName := "machine." + strconv.Itoa(id) + ".log"
-	f, err := os.OpenFile(logfileName, os.O_WRONLY|os.O_CREATE, 0644)
+	f, err := os.OpenFile(logfileName, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		log.Fatal("Error opening log file: ", err)
 	}
@@ -118,6 +118,7 @@ func Listen(port int) {
 					if failedId == 0 {
 						continue
 					}
+					fmt.Println("FAILED 1")
 					failedNode := memberList.GetNode(failedId)
 					failedNode.SetStatus(FAILED)
 					failedNode.IncrementHBCounter()
