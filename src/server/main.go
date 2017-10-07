@@ -129,7 +129,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 
 				receivedMembershipList := hb.GetMachine()
 				receivedMachineId := int(hb.GetId())
-				log.Println("Update Membership List")
 				UpdateMembershipLists(receivedMembershipList)
 				if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
 					// Send hb to new node with current membership list
@@ -140,6 +139,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				}
 			}
 		}
+	log.Println("Listen end", port)
 }
 
 func Contains(arr []int, num int) bool {
@@ -170,6 +170,7 @@ func Cleanup(id int) {
 		log.Println("Reset membership list")
 	} else {
 		memberList.Remove(id)
+		log.Println("Machine %d left", id)
 	}
 }
 
@@ -234,7 +235,6 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 			break
 		}
 	}
-	log.Println("Merge complete", A)
 	return A
 }
 
@@ -278,6 +278,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 				SendOnce(hb, receiverAddr)
 			}
 		}
+	log.Println("Gossip End", port)
 }
 
 func SendOnce(hb *pb.Heartbeat, addr string) {
@@ -420,6 +421,7 @@ func Leave() {
 	//remove self from membership list
 	leaveNode := memberList.GetNode(id)
 	leaveNode.SetStatus(LEAVE)
+	//leaveNode.IncrementHBCounter()
 
 	log.Printf("Machine %d left", id)
 	// Kill goroutines for sending and receiving heartbeats
