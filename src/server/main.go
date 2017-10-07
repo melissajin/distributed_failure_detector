@@ -98,9 +98,9 @@ func Listen(port int, wg *sync.WaitGroup) {
 				conn, err := net.ListenUDP("udp", udpAddr)
 
 				// TODO: set startup = false if machine leaves
-				if startup == true {
-					time.Sleep(startupTime)
-				}
+				//if startup == true {
+				//	time.Sleep(startupTime)
+				//}
 
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				if err != nil {
