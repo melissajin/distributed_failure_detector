@@ -111,6 +111,11 @@ func Listen(port int) {
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
+
+				_ , _, err = conn.ReadFrom(buffer)
+				if err != nil {
+					fmt.Println("FAILED 0", err)
+				}
 				if err, ok := err.(net.Error); ok && err.Timeout() {
 					// Didn't recieve heartbeat
 					currNode := memberList.GetNode(id)
@@ -126,7 +131,7 @@ func Listen(port int) {
 					go Cleanup(failedId)
 					continue
 				}
-				conn.ReadFrom(buffer)
+
 				conn.Close()
 
 				buffer = bytes.Trim(buffer, "\x00")
