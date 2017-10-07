@@ -174,6 +174,7 @@ func Cleanup(id int) {
 }
 
 func UpdateMembershipLists(receivedList []*pb.Machine) {
+
 	recievedMemList := NewMembershipList()
 
 	// Construct Membership List from received heartbeat
@@ -185,11 +186,11 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 		newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp, receivedStatus)
 		recievedMemList.Insert(newNode)
 	}
-
+	log.Println("Updating membership list", recievedMemList.Size(), memberList.Size())
 	if memberList.Size() == 1 {
-		MergeLists(recievedMemList, memberList)
+		memberList = MergeLists(recievedMemList, memberList)
 	} else {
-		MergeLists(memberList, recievedMemList)
+		memberList = MergeLists(memberList, recievedMemList)
 	}
 }
 
