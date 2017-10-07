@@ -155,6 +155,7 @@ func Cleanup(id int) {
 		// Kill goroutines for sending and receiving heartbeats
 		close(leave)
 		// Reset membership list
+		time.Sleep(cleanupTime)
 		memberList = NewMembershipList()
 		fmt.Println(memberList)
 	} else {
