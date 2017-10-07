@@ -19,13 +19,13 @@ import (
 
 var memberList MembersList
 var leave chan bool
+var entryMachineIds = []int{1,2,3,4,5}
 
 const (
 	connections = 4
 	cleanupTime = time.Second * 6
 	detectionTime = time.Second * 2
 	heartbeatInterval = time.Millisecond * 100
-	entryMachineId = 1
 )
 
 func main() {
@@ -84,7 +84,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 	}
 	ListenLoop:
 		for {
-			if(memberList.Size() < 2 && id != entryMachineId) {
+			if memberList.Size() < 2 && !Contains(entryMachineIds, id) {
 				continue
 			}
 
@@ -128,18 +128,27 @@ func Listen(port int, wg *sync.WaitGroup) {
 				}
 
 				receivedMembershipList := hb.GetMachine()
-				receivedMachindId := int(hb.GetId())
+				receivedMachineId := int(hb.GetId())
 				log.Println("Update Membership List")
 				UpdateMembershipLists(receivedMembershipList)
-				if(len(receivedMembershipList) == 1 && id == entryMachineId) {
+				if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
 					// Send hb to new node with current membership list
 					entryHB := ConstructPBHeartbeat()
-					newMachineAddr := getReceiverHost(receivedMachindId, 8000)
+					newMachineAddr := getReceiverHost(receivedMachineId, 8000)
 					log.Println(id, " entry send to ", newMachineAddr)
 					SendOnce(entryHB, newMachineAddr)
 				}
 			}
 		}
+}
+
+func Contains(arr []int, num int) bool {
+	for i := 0; i < len(entryMachineIds); i++ {
+		if num == entryMachineIds[i] {
+			return true
+		}
+	}
+	return false
 }
 
 func getReceiverHost(machineNum int, portNum int) string {
@@ -165,44 +174,66 @@ func Cleanup(id int) {
 }
 
 func UpdateMembershipLists(receivedList []*pb.Machine) {
-	_, id := GetIdentity()
-	origSize := memberList.Size()
-	// Reset own membership list and take list from entry machine
-	if  origSize == 1 && id != entryMachineId {
-		memberList.Remove(id)
-	}
+	recievedMemList := NewMembershipList()
 
+	// Construct Membership List from received heartbeat
 	for i := 0; i < len(receivedList); i++ {
 		machine := receivedList[i]
 		receivedId := machine.GetId()
-		nodeId := int(receivedId.Id)
 		receivedStatus := int(machine.GetStatus())
 		receivedHbCount := int(machine.GetHbCounter())
+		newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp, receivedStatus)
+		recievedMemList.Insert(newNode)
+	}
 
-		currNode := memberList.GetNode(nodeId)
-		if currNode == nil {
-			if receivedStatus == ALIVE {
-				newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp)
-				memberList.Insert(newNode)
-				log.Printf("Machine %d joined", int(receivedId.Id))
+	if memberList.Size() == 1 {
+		MergeLists(recievedMemList, memberList)
+	} else {
+		MergeLists(memberList, recievedMemList)
+	}
+}
+
+// Merges the list B into the list A
+func MergeLists(A MembersList, B MembersList) MembersList {
+	currB := B.GetHead()
+
+	for currB != nil {
+		currA := A.GetNode(currB.GetId())
+		statusB := currB.GetStatus()
+		idB := currB.GetId()
+		hbCountB := currB.GetHBCount()
+		timestampB := currB.GetTimestamp()
+
+		if currA == nil {
+			if statusB == ALIVE {
+				log.Printf("Machine %d joined", idB)
+				newNode := NewNode(idB, hbCountB, timestampB, statusB)
+				A.Insert(newNode)
 			}
 		} else {
-			currHBCount := currNode.GetHBCount()
+			hbCountA := currA.GetHBCount()
+			statusA := currA.GetStatus()
+			timestampA := currA.GetTimestamp()
 
-			if currHBCount < receivedHbCount {
-				if receivedStatus == LEAVE || receivedStatus == FAILED {
-					go Cleanup(nodeId)
+			if hbCountA < hbCountB {
+				// Log falsely detected failure
+				if statusA == FAILED && statusB == ALIVE && timestampA == timestampB {
+					log.Println("Falsely detected failure at machine ", idB)
+				} else {
+					if statusB == LEAVE || statusB == FAILED {
+						go Cleanup(idB)
+					}
+					currA.SetHBCounter(hbCountB)
+					currA.SetStatus(statusB)
 				}
-				currNode.SetHBCounter(receivedHbCount)
-				currNode.SetStatus(receivedStatus)
 			}
 		}
+		currB = currB.Next()
+		if currB == B.GetHead() {
+			break
+		}
 	}
-
-	// Set head to match other membership lists
-	if  origSize == 1 && id == entryMachineId {
-		memberList.SetHead(memberList.GetHead().Next())
-	}
+	return A
 }
 
 func GetIdentity() (string, int) {
@@ -288,48 +319,14 @@ func ConstructPBHeartbeat() *pb.Heartbeat{
 func Join() {
 	leave = make(chan bool)
 	_, id := GetIdentity()
-
 	// Create node and membership list and entry heartbeat
-	node := NewNode(id, 0, time.Now().String())
+	node := NewNode(id, 0, time.Now().String(), ALIVE)
 	memberList.Insert(node)
 
-	// Get membership list from entry machine
-	if(id != entryMachineId) {
-		entryHB := ConstructPBHeartbeat()
-
-		// Send entry heartbeat to entry machine
-		entryMachineAddr := getReceiverHost(entryMachineId, 8000)
-		log.Println(id, " ask to join ", entryMachineAddr)
-		SendOnce(entryHB, entryMachineAddr)
-
-		//receive heartbeat from entry machine and update memberList
-		receiverMachineAddr := getReceiverHost(id, 8000)
-		udpAddr,err := net.ResolveUDPAddr("udp", receiverMachineAddr)
-		if err != nil {
-			log.Fatal("Error getting UDP address:", err)
-		}
-
-		conn, err := net.ListenUDP("udp", udpAddr)
-		if err != nil {
-			log.Fatal("Error listening to addr: ", err)
-		}
-
-		buffer := make([]byte, 1024)
-		conn.ReadFromUDP(buffer)
-		buffer = bytes.Trim(buffer, "\x00")
-		hb := &pb.Heartbeat{}
-		err = proto.Unmarshal(buffer, hb)
-		if err != nil {
-			log.Fatal("Unmarshal2 error:", err)
-		}
-		conn.Close()
-
-		//merge membership lists
-		UpdateMembershipLists(hb.Machine)
-	} else {
-		log.Printf("Machine %d joined", id)
+	// Get membership list from one entry machine
+	for i := 0; i < len(entryMachineIds); i++ {
+		go GetCurrentMembers(entryMachineIds[i])
 	}
-
 
 	var wg sync.WaitGroup
 	wg.Add(8)
@@ -342,6 +339,50 @@ func Join() {
 
 	log.Println("Last cleanup")
 	Cleanup(id)
+}
+
+func GetCurrentMembers(entryId int) {
+	_, id := GetIdentity()
+	if id == entryId {
+		return
+	}
+
+	entryHB := ConstructPBHeartbeat()
+
+	// Send entry heartbeat to entry machine
+	entryMachineAddr := getReceiverHost(entryId, 8000)
+	log.Println(entryId, " ask to join ", entryMachineAddr)
+	SendOnce(entryHB, entryMachineAddr)
+
+	//receive heartbeat from entry machine and update memberList
+	receiverMachineAddr := getReceiverHost(entryId, 8000)
+	udpAddr,err := net.ResolveUDPAddr("udp", receiverMachineAddr)
+	if err != nil {
+		log.Fatal("Error getting UDP address:", err)
+	}
+
+	conn, err := net.ListenUDP("udp", udpAddr)
+	defer conn.Close()
+	if err != nil {
+		log.Fatal("Error listening to addr: ", err)
+	}
+
+	conn.SetReadDeadline(time.Now().Add(detectionTime))
+	buffer := make([]byte, 1024)
+	_, _, err = conn.ReadFromUDP(buffer)
+	if err != nil {
+		return
+	}
+
+	buffer = bytes.Trim(buffer, "\x00")
+	hb := &pb.Heartbeat{}
+	err = proto.Unmarshal(buffer, hb)
+	if err != nil {
+		log.Fatal("Unmarshal2 error:", err)
+	}
+
+	//merge membership lists
+	UpdateMembershipLists(hb.Machine)
 }
 
 func getNeighbor(num int, currNode *Node) int {
@@ -375,13 +416,4 @@ func Leave() {
 	log.Printf("Machine %d left", id)
 	// Kill goroutines for sending and receiving heartbeats
 	close(leave)
-}
-
-func printMemberList() {
-	currNode := memberList.GetHead()
-	if(currNode == nil){
-		fmt.Println("No members to print")
-	} else {
-		fmt.Printf("Node id: %d\n", currNode.GetId())
-	}
 }

@@ -18,8 +18,8 @@ type Node struct {
 	Status int
 }
 
-func NewNode(id int, hbCount int, timestamp string) * Node {
-	return &Node{ id, hbCount, timestamp, nil, nil, ALIVE }
+func NewNode(id int, hbCount int, timestamp string, status int) * Node {
+	return &Node{ id, hbCount, timestamp, nil, nil, status }
 }
 
 func (n *Node) GetId() int {
