@@ -104,28 +104,27 @@ func Listen(port int, wg *sync.WaitGroup) {
 					conn.SetReadDeadline(time.Now().Add(detectionTime))
 
 					_ , _, err = conn.ReadFrom(buffer)
-				}
-
-				// Timeout error, machine failed
-				if err != nil {
-					log.Println("ERROR READING FROM CONNECTION: ", err)
-					if err, ok := err.(net.Error); ok && err.Timeout() {
-						currNode := memberList.GetNode(id)
-						if currNode == nil {
+					// Timeout error, machine failed
+					if err != nil {
+						log.Println("ERROR READING FROM CONNECTION: ", err)
+						if err, ok := err.(net.Error); ok && err.Timeout() {
+							currNode := memberList.GetNode(id)
+							if currNode == nil {
+								continue
+							}
+							failedId := getNeighbor(port-8000, currNode)
+							if failedId == 0 {
+								continue
+							}
+							log.Printf("Machine %d failed at port %d", failedId, port)
+							failedNode := memberList.GetNode(failedId)
+							failedNode.SetStatus(FAILED)
+							failedNode.IncrementHBCounter()
+							go Cleanup(failedId)
+							continue
+						} else {
 							continue
 						}
-						failedId := getNeighbor(port-8000, currNode)
-						if failedId == 0 {
-							continue
-						}
-						log.Printf("Machine %d failed at port %d", failedId, port)
-						failedNode := memberList.GetNode(failedId)
-						failedNode.SetStatus(FAILED)
-						failedNode.IncrementHBCounter()
-						go Cleanup(failedId)
-						continue
-					} else {
-						continue
 					}
 				}
 
