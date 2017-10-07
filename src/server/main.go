@@ -148,12 +148,17 @@ func getReceiverHost(machineNum int, portNum int) string {
 //Cleanup after clean up period
 func Cleanup(id int) {
 	time.Sleep(cleanupTime)
+	_, ownId := GetIdentity()
 
-	// Kill goroutines for sending and receiving heartbeats
-	close(leave)
+	if(id == ownId) {
+		// Kill goroutines for sending and receiving heartbeats
+		close(leave)
 
-	// Reset membership list
-	memberList = MembersList{}
+		// Reset membership list
+		memberList = MembersList{}
+	} else {
+		memberList.Remove(id)
+	}
 }
 
 func UpdateMembershipLists(receivedList []*pb.Machine) {
