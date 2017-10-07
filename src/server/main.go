@@ -100,6 +100,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				neighbor := getNeighbor(port-8000, currNode)
 				// TODO: only set deadline after machine joins
 				if(neighbor != 0) {
+					log.Println("Neighbor is: ", neighbor, " at port: ", port)
 					conn.SetReadDeadline(time.Now().Add(detectionTime))
 
 					_ , _, err = conn.ReadFrom(buffer)
