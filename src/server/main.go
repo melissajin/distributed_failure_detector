@@ -103,9 +103,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				if err != nil {
 					log.Println("ERROR READING FROM CONNECTION: ", err)
 					if err, ok := err.(net.Error); ok && err.Timeout() {
-						fmt.Println("ERROR:", err)
 						currNode := memberList.GetNode(id)
-						fmt.Println(currNode, memberList, id)
 						failedId := getNeighbor(port-8000, currNode)
 
 						if failedId == 0 {
