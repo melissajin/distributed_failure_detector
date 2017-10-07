@@ -73,7 +73,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	_, id := GetIdentity()
-	addr := getReceiverHost(id, port)
+	addr := getAddress(id, port)
 
 	udpAddr,err := net.ResolveUDPAddr("udp",addr)
 	if err != nil {
@@ -82,9 +82,9 @@ func Listen(port int, wg *sync.WaitGroup) {
 
 	ListenLoop:
 		for {
-			if memberList.Size() < 2 && !Contains(entryMachineIds, id) {
-				continue
-			}
+			//if memberList.Size() < 2 && !Contains(entryMachineIds, id) {
+			//	continue
+			//}
 
 			select {
 			case <- leave:
@@ -93,13 +93,16 @@ func Listen(port int, wg *sync.WaitGroup) {
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
 
+				// TODO: only set deadline after machine joins
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				if err != nil {
 					fmt.Println("ERROR: ", err, conn)
 				}
 				_ , _, err = conn.ReadFrom(buffer)
 				conn.Close()
-				if err != nil {
+				buffer = bytes.Trim(buffer, "\x00")
+
+				if err != nil && !(len(buffer) > 0) {
 					log.Println("ERROR READING FROM CONNECTION: ", err)
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						currNode := memberList.GetNode(id)
@@ -122,10 +125,10 @@ func Listen(port int, wg *sync.WaitGroup) {
 					}
 				}
 
-				buffer = bytes.Trim(buffer, "\x00")
 				if(len(buffer) == 0){
 					continue
 				}
+
 				hb := &pb.Heartbeat{}
 				err = proto.Unmarshal(buffer, hb)
 				if err != nil {
@@ -133,15 +136,16 @@ func Listen(port int, wg *sync.WaitGroup) {
 				}
 
 				receivedMembershipList := hb.GetMachine()
-				receivedMachineId := int(hb.GetId())
 				UpdateMembershipLists(receivedMembershipList)
-				if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
-					// Send hb to new node with current membership list
-					entryHB := ConstructPBHeartbeat()
-					newMachineAddr := getReceiverHost(receivedMachineId, 8000+id)
-					log.Println(id, " entry send to ", newMachineAddr)
-					SendOnce(entryHB, newMachineAddr)
-				}
+
+				//receivedMachineId := int(hb.GetId())
+				//if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
+				//	// Send hb to new node with current membership list
+				//	entryHB := ConstructPBHeartbeat()
+				//	newMachineAddr := getAddress(receivedMachineId, 8000+id)
+				//	log.Println(id, " entry send to ", newMachineAddr)
+				//	SendOnce(entryHB, newMachineAddr)
+				//}
 			}
 		}
 }
@@ -155,7 +159,7 @@ func Contains(arr []int, num int) bool {
 	return false
 }
 
-func getReceiverHost(machineNum int, portNum int) string {
+func getAddress(machineNum int, portNum int) string {
 	var machineStr string
 	if(machineNum < 10) {
 		machineStr = "0" + strconv.Itoa(machineNum)
@@ -285,7 +289,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 				if receiverId == 0 {
 					continue
 				}
-				receiverAddr := getReceiverHost(receiverId, port)
+				receiverAddr := getAddress(receiverId, port)
 
 				//increment heartbeat counter for node sending hb
 				currNode.IncrementHBCounter()
@@ -339,25 +343,28 @@ func ConstructPBHeartbeat() *pb.Heartbeat{
 func Join() {
 	leave = make(chan bool)
 	_, id := GetIdentity()
+
 	// Create node and membership list and entry heartbeat
 	node := NewNode(id, 0, time.Now().String(), ALIVE)
 	memberList.Insert(node)
 
+	// Get membership list from one entry machine
 	var wg1 sync.WaitGroup
 	wg1.Add(5)
-	// Get membership list from one entry machine
 	for i := 0; i < len(entryMachineIds); i++ {
 		go GetCurrentMembers(entryMachineIds[i], &wg1)
 	}
 	wg1.Wait()
 
+	// start 4 threads to listen and 4 threads to gossip
 	var wg2 sync.WaitGroup
 	wg2.Add(8)
-	// start 2 threads for each connection, each listening to different port
 	for i := 0; i < connections; i++ {
 		go Listen(8000 + i, &wg2)
 		go Gossip(8000 + i, id, &wg2)
 	}
+
+	// Setup ports to listen for new machines if it is entry machine
 	if(Contains(entryMachineIds, id)) {
 		wg2.Add(1)
 		go SetupEntryPort(&wg2)
@@ -371,7 +378,7 @@ func Join() {
 func SetupEntryPort(wg *sync.WaitGroup) {
 	defer wg.Done()
 	_, id := GetIdentity()
-	addr := getReceiverHost(id, 8005)
+	addr := getAddress(id, 8005)
 
 	udpAddr,err := net.ResolveUDPAddr("udp",addr)
 	if err != nil {
@@ -388,6 +395,8 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
 
+				// TODO: might need
+				//conn.SetReadDeadline(time.Now().Add(detectionTime))
 				_ , _, err = conn.ReadFrom(buffer)
 				conn.Close()
 				if err != nil {
@@ -405,15 +414,12 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				}
 
 				receivedMembershipList := hb.GetMachine()
-				receivedMachineId := int(hb.GetId())
 				UpdateMembershipLists(receivedMembershipList)
-				if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
-					// Send hb to new node with current membership list
-					entryHB := ConstructPBHeartbeat()
-					newMachineAddr := getReceiverHost(receivedMachineId, 8000+id)
-					log.Println(id, " entry send to ", newMachineAddr)
-					SendOnce(entryHB, newMachineAddr)
-				}
+				entryHB := ConstructPBHeartbeat()
+				receivedMachineId := int(hb.GetId())
+				newMachineAddr := getAddress(receivedMachineId, 8000+id)
+				log.Println(id, " entry send to ", newMachineAddr)
+				SendOnce(entryHB, newMachineAddr)
 			}
 		}
 }
@@ -429,12 +435,12 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	entryHB := ConstructPBHeartbeat()
 
 	// Send entry heartbeat to entry machine
-	entryMachineAddr := getReceiverHost(entryId, 8005)
+	entryMachineAddr := getAddress(entryId, 8005)
 	log.Println(entryId, " ask to join ", entryMachineAddr)
 	SendOnce(entryHB, entryMachineAddr)
 
 	//receive heartbeat from entry machine and update memberList
-	receiverMachineAddr := getReceiverHost(id, 8000+entryId)
+	receiverMachineAddr := getAddress(id, 8000+entryId)
 	udpAddr,err := net.ResolveUDPAddr("udp", receiverMachineAddr)
 	if err != nil {
 		log.Fatal("Error getting UDP address:", err)
