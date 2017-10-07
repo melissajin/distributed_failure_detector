@@ -363,10 +363,12 @@ func GetCurrentMembers(entryId int) {
 	fmt.Println("GetCurrentMembers 1")
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
+		fmt.Println("GetCurrentMembers 6")
+
 		log.Fatal("Error listening to addr: ", err)
 	}
 	fmt.Println("GetCurrentMembers 2")
-	conn.SetReadDeadline(time.Now().Add(detectionTime))
+	//conn.SetReadDeadline(time.Now().Add(detectionTime))
 	fmt.Println("GetCurrentMembers 3")
 	buffer := make([]byte, 1024)
 	_, _, err = conn.ReadFromUDP(buffer)
