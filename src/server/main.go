@@ -252,10 +252,10 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	currNode := memberList.GetNode(id)
-	for(memberList.Size() < 2) {}
 
 	GossipLoop:
 		for {
+			for(memberList.Size() < 2) {}
 			select {
 			case <- leave:
 				break GossipLoop
@@ -405,7 +405,7 @@ func getNeighbor(num int, currNode *Node) int {
 	} else if(num == 3) {
 		neighbor = ll
 	}
-
+	log.Println("GetNeighbor", neighbor)
 	if neighbor != nil && neighbor.GetId() != id {
 		return neighbor.GetId()
 	} else {
