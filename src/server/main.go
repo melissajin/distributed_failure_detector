@@ -355,6 +355,7 @@ func Join() {
 
 func getNeighbor(num int, currNode *Node) int {
 	r, rr, l, ll := currNode.GetNeighbors()
+	_, id := GetIdentity()
 	var neighbor *Node
 	if(num == 0) {
 		neighbor = rr
@@ -366,7 +367,7 @@ func getNeighbor(num int, currNode *Node) int {
 		neighbor = ll
 	}
 
-	if neighbor != nil {
+	if neighbor != nil && neighbor.GetId() != id {
 		return neighbor.GetId()
 	} else {
 		return 0
