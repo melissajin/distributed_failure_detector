@@ -89,7 +89,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 		for {
 			select {
 			case <- leave:
-				conn.Close()
 				log.Println("Break out of listen for port: ", port)
 				break ListenLoop
 			default:
@@ -152,6 +151,8 @@ func Listen(port int, wg *sync.WaitGroup) {
 				//}
 			}
 		}
+	conn.Close()
+
 }
 
 func Contains(arr []int, num int) bool {
@@ -390,6 +391,8 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 		log.Fatal("Error getting UDP address:", err)
 	}
 
+	conn, err := net.ListenUDP("udp", udpAddr)
+
 	EntryLoop:
 		for {
 			select {
@@ -399,12 +402,9 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 
 			default:
 				buffer := make([]byte, 1024)
-				conn, err := net.ListenUDP("udp", udpAddr)
 
-				// TODO: might need
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				_ , _, err = conn.ReadFrom(buffer)
-				conn.Close()
 				if err != nil {
 					continue
 				}
@@ -428,6 +428,8 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				SendOnce(entryHB, newMachineAddr)
 			}
 		}
+	conn.Close()
+
 }
 
 func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
