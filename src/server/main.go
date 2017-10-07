@@ -187,7 +187,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 		recievedMemList.Insert(newNode)
 	}
 	log.Println("Updating membership list", recievedMemList.Size(), memberList.Size())
-	if memberList.Size() == 1 {
+	if memberList.Size() == 1 && recievedMemList.Size() != 1 {
 		memberList = MergeLists(recievedMemList, memberList)
 	} else {
 		memberList = MergeLists(memberList, recievedMemList)
