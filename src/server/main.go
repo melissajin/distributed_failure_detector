@@ -129,6 +129,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 
 				receivedMembershipList := hb.GetMachine()
 				receivedMachindId := int(hb.GetId())
+				log.Println("Update Membership List")
 				UpdateMembershipLists(receivedMembershipList)
 				if(len(receivedMembershipList) == 1 && id == entryMachineId) {
 					// Send hb to new node with current membership list
@@ -157,6 +158,7 @@ func Cleanup(id int) {
 	if(id == ownId) {
 		// Reset membership list
 		memberList = NewMembershipList()
+		log.Println("Reset membership list")
 	} else {
 		memberList.Remove(id)
 	}
