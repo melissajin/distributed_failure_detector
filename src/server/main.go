@@ -21,7 +21,6 @@ import (
 var memberList MembersList
 var leave chan bool
 var entryMachineIds = []int{1,2,3,4,5}
-var startup = false
 
 const (
 	connections = 4
@@ -98,11 +97,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
 
-				// TODO: set startup = false if machine leaves
-				//if startup == true {
-				//	time.Sleep(startupTime)
-				//}
-
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				if err != nil {
 					fmt.Println("ERROR: ", err, conn)
@@ -148,7 +142,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 					newMachineAddr := getReceiverHost(receivedMachineId, 8000+id)
 					log.Println(id, " entry send to ", newMachineAddr)
 					SendOnce(entryHB, newMachineAddr)
-					startup = true
 				}
 			}
 		}
@@ -383,7 +376,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	entryHB := ConstructPBHeartbeat()
 
 	// Send entry heartbeat to entry machine
-	entryMachineAddr := getReceiverHost(entryId, 8000)
+	entryMachineAddr := getReceiverHost(entryId, 8003)
 	log.Println(entryId, " ask to join ", entryMachineAddr)
 	SendOnce(entryHB, entryMachineAddr)
 
