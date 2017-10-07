@@ -115,9 +115,6 @@ func Listen(port int) {
 				_ , _, err = conn.ReadFrom(buffer)
 				if err != nil {
 					fmt.Println("FAILED 0", err)
-				}
-				if err, ok := err.(net.Error); ok && err.Timeout() {
-					// Didn't recieve heartbeat
 					currNode := memberList.GetNode(id)
 					failedId := getNeighbor(port-8000, currNode)
 					if failedId == 0 {
@@ -131,6 +128,21 @@ func Listen(port int) {
 					go Cleanup(failedId)
 					continue
 				}
+				//if err, ok := err.(net.Error); ok && err.Timeout() {
+				//	// Didn't recieve heartbeat
+				//	currNode := memberList.GetNode(id)
+				//	failedId := getNeighbor(port-8000, currNode)
+				//	if failedId == 0 {
+				//		continue
+				//	}
+				//	fmt.Println("FAILED 1")
+				//	failedNode := memberList.GetNode(failedId)
+				//	failedNode.SetStatus(FAILED)
+				//	failedNode.IncrementHBCounter()
+				//	log.Printf("Machine %d failed", failedId)
+				//	go Cleanup(failedId)
+				//	continue
+				//}
 
 				conn.Close()
 
