@@ -149,6 +149,9 @@ func getReceiverHost(machineNum int, portNum int) string {
 func Cleanup(id int) {
 	time.Sleep(cleanupTime)
 
+	// Kill goroutines for sending and receiving heartbeats
+	close(leave)
+
 	// Reset membership list
 	memberList = MembersList{}
 }
@@ -349,13 +352,10 @@ func getNeighbor(num int, currNode *Node) int {
 func Leave() {
 	_, id := GetIdentity()
 
-	// Kill goroutines for sending and receiving heartbeats
-	close(leave)
-
 	//remove self from membership list
 	leaveNode := memberList.GetNode(id)
-
 	leaveNode.SetStatus(LEAVE)
+
 	log.Printf("Machine %d left", id)
 	go Cleanup(id)
 }
