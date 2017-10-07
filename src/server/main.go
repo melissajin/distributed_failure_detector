@@ -392,6 +392,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
 		log.Println("Error listening to addr: ", receiverMachineAddr, err)
+		conn.Close()
 		return
 	}
 	//defer conn.Close()
