@@ -105,14 +105,13 @@ func Listen(port int, wg *sync.WaitGroup) {
 							continue
 						}
 						failedId := getNeighbor(port-8000, currNode)
-
+						log.Printf("Machine %d failed at port %d", failedId, port)
 						if failedId == 0 {
 							continue
 						}
 						failedNode := memberList.GetNode(failedId)
 						failedNode.SetStatus(FAILED)
 						failedNode.IncrementHBCounter()
-						log.Printf("Machine %d failed at port %d", failedId, port)
 						go Cleanup(failedId)
 						continue
 					} else {
