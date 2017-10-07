@@ -104,9 +104,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 					conn.SetReadDeadline(time.Now().Add(detectionTime))
 
 					_ , _, err = conn.ReadFrom(buffer)
-					if err != nil {
-						continue
-					}
 				}
 
 				// Timeout error, machine failed
