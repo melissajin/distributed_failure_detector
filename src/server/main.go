@@ -85,32 +85,16 @@ func Listen(port int) {
 				continue
 			}
 
-			timeout := make(chan bool, 1)
-			go func() {
-				time.Sleep(detectionTime)
-				timeout <- true
-			}()
-
-
 			select {
 			case <- leave:
 				fmt.Println("Stop Listen")
 				break ListenLoop
-			//case <- time.After(detectionTime):
-			//	currNode := memberList.GetNode(id)
-			//	failedId := getNeighbor(port-8000, currNode)
-			//	if failedId == 0 {
-			//		continue
-			//	}
-			//	failedNode := memberList.GetNode(failedId)
-			//	failedNode.SetStatus(FAILED)
-			//	failedNode.IncrementHBCounter()
-			//	log.Printf("Machine %d failed", failedId)
-			//	go Cleanup(failedId)
 			default:
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
-				conn.SetReadDeadline(time.Now().Add(detectionTime))
+				if !(memberList.Size() < 2 && id != entryMachineId){
+					conn.SetReadDeadline(time.Now().Add(detectionTime))
+				}
 
 				_ , _, err = conn.ReadFrom(buffer)
 				if err != nil {
