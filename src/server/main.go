@@ -160,6 +160,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 
 	// Reset own membership list and take list from entry machine
 	if memberList.Size() == 1 && id != entryMachineId {
+		fmt.Println("REMOVE")
 		memberList.Remove(id)
 	}
 
