@@ -29,6 +29,10 @@ const (
 	heartbeatInterval = time.Millisecond * 100
 )
 
+const (
+	UPDATE = iota
+	JOIN
+)
 func main() {
 	memberList = NewMembershipList()
 	_, id := GetIdentity()
@@ -140,7 +144,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				}
 
 				receivedMembershipList := hb.GetMachine()
-				UpdateMembershipLists(receivedMembershipList)
+				UpdateMembershipLists(receivedMembershipList, UPDATE)
 
 				//receivedMachineId := int(hb.GetId())
 				//if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
@@ -188,7 +192,7 @@ func Cleanup(id int) {
 	}
 }
 
-func UpdateMembershipLists(receivedList []*pb.Machine) {
+func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 
 	recievedMemList := NewMembershipList()
 
@@ -202,7 +206,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 		recievedMemList.Insert(newNode)
 	}
 
-	if memberList.Size() == 1 && recievedMemList.Size() != 1 {
+	if status == JOIN {
 		memberList = MergeLists(recievedMemList, memberList)
 	} else {
 		memberList = MergeLists(memberList, recievedMemList)
@@ -421,7 +425,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				}
 
 				receivedMembershipList := hb.GetMachine()
-				UpdateMembershipLists(receivedMembershipList)
+				UpdateMembershipLists(receivedMembershipList, JOIN)
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
 				newMachineAddr := getAddress(receivedMachineId, 8000+id)
@@ -478,7 +482,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	}
 
 	//merge membership lists
-	UpdateMembershipLists(hb.Machine)
+	UpdateMembershipLists(hb.Machine, UPDATE)
 }
 
 func getNeighbor(num int, currNode *Node) int {
