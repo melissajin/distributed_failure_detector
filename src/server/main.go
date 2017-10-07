@@ -24,7 +24,7 @@ var entryMachineIds = []int{1,2,3,4,5}
 const (
 	connections = 4
 	cleanupTime = time.Second * 6
-	detectionTime = time.Second * 2
+	detectionTime = time.Second * 5
 	heartbeatInterval = time.Millisecond * 500
 )
 
