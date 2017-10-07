@@ -92,9 +92,8 @@ func Listen(port int) {
 			default:
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
-				if !(memberList.Size() < 2 && id != entryMachineId){
-					conn.SetReadDeadline(time.Now().Add(detectionTime))
-				}
+				fmt.Println(conn, err)
+				conn.SetReadDeadline(time.Now().Add(detectionTime))
 
 				_ , _, err = conn.ReadFrom(buffer)
 				if err != nil {
