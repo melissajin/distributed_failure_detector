@@ -365,7 +365,6 @@ func GetCurrentMembers(entryId int) {
 	if err != nil {
 		log.Fatal("Error listening to addr: ", err)
 	}
-	defer conn.Close()
 
 	conn.SetReadDeadline(time.Now().Add(detectionTime))
 	buffer := make([]byte, 1024)
@@ -380,7 +379,7 @@ func GetCurrentMembers(entryId int) {
 	if err != nil {
 		log.Fatal("Unmarshal2 error:", err)
 	}
-
+	conn.Close()
 	//merge membership lists
 	UpdateMembershipLists(hb.Machine)
 }
