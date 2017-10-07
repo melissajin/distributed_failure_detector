@@ -104,12 +104,11 @@ func Listen(port int, wg *sync.WaitGroup) {
 					conn.SetReadDeadline(time.Now().Add(detectionTime))
 
 					_ , _, err = conn.ReadFrom(buffer)
-					buffer = bytes.Trim(buffer, "\x00")
 					if err != nil {
 						continue
 					}
 				}
-				/*if err != nil && !(len(buffer) > 0) {
+				/*if err != nil {
 					log.Println("ERROR READING FROM CONNECTION: ", err)
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						currNode := memberList.GetNode(id)
@@ -130,7 +129,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 						continue
 					}
 				}*/
-
+				buffer = bytes.Trim(buffer, "\x00")
 				if(len(buffer) == 0){
 					continue
 				}
