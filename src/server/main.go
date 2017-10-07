@@ -80,9 +80,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 		log.Fatal("Error getting UDP address:", err)
 	}
 
-	if err != nil {
-		log.Fatal("Error listening:", err)
-	}
 	ListenLoop:
 		for {
 			if memberList.Size() < 2 && !Contains(entryMachineIds, id) {
@@ -361,10 +358,64 @@ func Join() {
 		go Listen(8000 + i, &wg2)
 		go Gossip(8000 + i, id, &wg2)
 	}
+	if(Contains(entryMachineIds, id)) {
+		wg2.Add(1)
+		go SetupEntryPort(&wg2)
+	}
 	wg2.Wait()
 
 	log.Println("Last cleanup")
 	Cleanup(id)
+}
+
+func SetupEntryPort(wg *sync.WaitGroup) {
+	defer wg.Done()
+	_, id := GetIdentity()
+	addr := getReceiverHost(id, 8005)
+
+	udpAddr,err := net.ResolveUDPAddr("udp",addr)
+	if err != nil {
+		log.Fatal("Error getting UDP address:", err)
+	}
+
+	EntryLoop:
+		for {
+			select {
+			case <- leave:
+				break EntryLoop
+
+			default:
+				buffer := make([]byte, 1024)
+				conn, err := net.ListenUDP("udp", udpAddr)
+
+				_ , _, err = conn.ReadFrom(buffer)
+				conn.Close()
+				if err != nil {
+					continue
+				}
+
+				buffer = bytes.Trim(buffer, "\x00")
+				if(len(buffer) == 0){
+					continue
+				}
+				hb := &pb.Heartbeat{}
+				err = proto.Unmarshal(buffer, hb)
+				if err != nil {
+					log.Fatal("Unmarshal error:", err)
+				}
+
+				receivedMembershipList := hb.GetMachine()
+				receivedMachineId := int(hb.GetId())
+				UpdateMembershipLists(receivedMembershipList)
+				if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
+					// Send hb to new node with current membership list
+					entryHB := ConstructPBHeartbeat()
+					newMachineAddr := getReceiverHost(receivedMachineId, 8000+id)
+					log.Println(id, " entry send to ", newMachineAddr)
+					SendOnce(entryHB, newMachineAddr)
+				}
+			}
+		}
 }
 
 func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
@@ -378,7 +429,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	entryHB := ConstructPBHeartbeat()
 
 	// Send entry heartbeat to entry machine
-	entryMachineAddr := getReceiverHost(entryId, 8003)
+	entryMachineAddr := getReceiverHost(entryId, 8005)
 	log.Println(entryId, " ask to join ", entryMachineAddr)
 	SendOnce(entryHB, entryMachineAddr)
 
