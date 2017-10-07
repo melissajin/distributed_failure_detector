@@ -15,6 +15,7 @@ import (
 	pb "heartbeat/heartbeat"
 	"bytes"
 	"sync"
+	"math"
 )
 
 var memberList MembersList
@@ -228,18 +229,31 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 			statusA := currA.GetStatus()
 			timestampA := currA.GetTimestamp()
 
-			if hbCountA < hbCountB {
-				// Log falsely detected failure
-				if statusA == FAILED && statusB == ALIVE && timestampA == timestampB {
-					log.Println("Falsely detected failure at machine ", idB)
-				} else {
-					if statusB == LEAVE || statusB == FAILED {
-						go Cleanup(idB)
-					}
-					currA.SetHBCounter(hbCountB)
+			if timestampB == timestampA {
+				if (statusB == LEAVE || statusB == FAILED) && statusA == ALIVE {
 					currA.SetStatus(statusB)
+					go Cleanup(idB)
+				} else if statusA == ALIVE && statusB == ALIVE {
+					currA.SetHBCounter(int(math.Max(float64(hbCountA), float64(hbCountB))))
+				} else if statusA == FAILED && statusB == ALIVE {
+					log.Println("Falsely detected failure at machine ", idB)
 				}
 			}
+			//if((statusB == LEAVE || statusB == FAILED) && timestampB == timestampA) {
+			//	go Cleanup(idB)
+			//	currA.SetStatus(statusB)
+			//} else if hbCountA < hbCountB {
+			//	// Log falsely detected failure
+			//	if statusA == FAILED && statusB == ALIVE && timestampA == timestampB {
+			//		log.Println("Falsely detected failure at machine ", idB)
+			//	} else {
+			//		if statusB == LEAVE || statusB == FAILED {
+			//			go Cleanup(idB)
+			//		}
+			//		currA.SetHBCounter(hbCountB)
+			//		currA.SetStatus(statusB)
+			//	}
+			//}
 		}
 		currB = currB.Next()
 		if currB == B.GetHead() {
