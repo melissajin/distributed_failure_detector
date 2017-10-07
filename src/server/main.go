@@ -26,8 +26,7 @@ const (
 	connections = 4
 	cleanupTime = time.Second * 6
 	detectionTime = time.Second * 2
-	startupTime = time.Second * 2
-	heartbeatInterval = time.Millisecond * 200
+	heartbeatInterval = time.Millisecond * 100
 )
 
 func main() {
