@@ -130,7 +130,7 @@ func Listen(port int) {
 					// Send hb to new node with current membership list
 					entryHB := ConstructPBHeartbeat()
 					newMachineAddr := getReceiverHost(receivedMachindId, 8000)
-					log.Println(id, " entry send to ", newMachineAddr, entryHB)
+					log.Println(id, " entry send to ", newMachineAddr)
 					SendOnce(entryHB, newMachineAddr)
 				}
 			}
@@ -174,10 +174,12 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 		receivedHbCount := int(machine.GetHbCounter())
 
 		currNode := memberList.GetNode(nodeId)
-		if currNode == nil && receivedStatus == ALIVE {
-			newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp)
-			memberList.Insert(newNode)
-			log.Printf("Machine %d joined", int(receivedId.Id))
+		if currNode == nil {
+			if receivedStatus == ALIVE {
+				newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp)
+				memberList.Insert(newNode)
+				log.Printf("Machine %d joined", int(receivedId.Id))
+			}
 		} else {
 			currHBCount := currNode.GetHBCount()
 
@@ -227,7 +229,7 @@ func Gossip(port int, id int) {
 				currNode.IncrementHBCounter()
 
 				hb := ConstructPBHeartbeat()
-				log.Println(id, " gossip to ", receiverAddr, hb)
+				log.Println(id, " gossip to ", receiverAddr)
 				SendOnce(hb, receiverAddr)
 			}
 		}
@@ -285,7 +287,7 @@ func Join() {
 
 		// Send entry heartbeat to entry machine
 		entryMachineAddr := getReceiverHost(entryMachineId, 8000)
-		log.Println(id, " ask to join ", entryMachineAddr, entryHB)
+		log.Println(id, " ask to join ", entryMachineAddr)
 		SendOnce(entryHB, entryMachineAddr)
 
 		//receive heartbeat from entry machine and update memberList
