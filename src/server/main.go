@@ -21,9 +21,9 @@ var leave chan bool
 
 const (
 	connections = 4
-	cleanupTime = time.Second * 6		//seconds
-	detectionTime = time.Second * 2		//seconds
-	heartbeatInterval = time.Second * 1 //seconds
+	cleanupTime = time.Second * 6
+	detectionTime = time.Second * 2
+	heartbeatInterval = time.Millisecond * 100
 	entryMachineId = 1
 )
 
@@ -146,6 +146,8 @@ func getReceiverHost(machineNum int, portNum int) string {
 //Cleanup after clean up period
 func Cleanup(id int) {
 	time.Sleep(cleanupTime)
+	fmt.Println("CLEANUP")
+
 	memberList.Remove(id)
 
 	// Kill goroutines for sending and receiving heartbeats
@@ -160,7 +162,6 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 
 	// Reset own membership list and take list from entry machine
 	if memberList.Size() == 1 && id != entryMachineId {
-		fmt.Println("REMOVE")
 		memberList.Remove(id)
 	}
 
