@@ -149,20 +149,15 @@ func getReceiverHost(machineNum int, portNum int) string {
 func Cleanup(id int) {
 	time.Sleep(cleanupTime)
 
-	memberList.Remove(id)
-
-	// Kill goroutines for sending and receiving heartbeats
-	//_, currId := GetIdentity()
-	//if(currId == id){
-	//	leave <- true
-	//}
+	// Reset membership list
+	memberList = MembersList{}
 }
 
 func UpdateMembershipLists(receivedList []*pb.Machine) {
 	_, id := GetIdentity()
-
+	origSize := memberList.Size()
 	// Reset own membership list and take list from entry machine
-	if memberList.Size() == 1 && id != entryMachineId {
+	if  origSize == 1 && id != entryMachineId {
 		memberList.Remove(id)
 	}
 
@@ -191,6 +186,11 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 				currNode.SetStatus(receivedStatus)
 			}
 		}
+	}
+
+	// Set head to match other membership lists
+	if  origSize == 1 && id == entryMachineId {
+		memberList.SetHead(memberList.GetHead().Next())
 	}
 }
 

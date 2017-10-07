@@ -23,6 +23,12 @@ func (m *MembersList) GetHead() *Node {
 	return head
 }
 
+func (m *MembersList) SetHead(newHead *Node) {
+	m.mu.Lock()
+	m.Head = newHead
+	m.mu.Unlock()
+}
+
 func (m *MembersList) GetNode(id int) *Node {
 	m.mu.Lock()
 	node := m.NodeMap[id]
