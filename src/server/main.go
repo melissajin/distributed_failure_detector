@@ -153,11 +153,10 @@ func Cleanup(id int) {
 
 	if(id == ownId) {
 		// Kill goroutines for sending and receiving heartbeats
-		fmt.Println("FUCKFUCK")
 		close(leave)
-		fmt.Println("FUCK")
 		// Reset membership list
 		memberList = NewMembershipList()
+		fmt.Println(memberList)
 	} else {
 		memberList.Remove(id)
 	}
