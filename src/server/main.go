@@ -207,8 +207,10 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	}
 
 	if status == JOIN {
+		fmt.Println("JOIN: ", recievedMemList, memberList)
 		memberList = MergeLists(recievedMemList, memberList)
 	} else {
+		fmt.Println("UPDATE")
 		memberList = MergeLists(memberList, recievedMemList)
 	}
 }
