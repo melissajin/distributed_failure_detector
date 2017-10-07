@@ -371,7 +371,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	}
 	//defer conn.Close()
 
-	conn.SetReadDeadline(time.Now().Add(detectionTime))
+	//conn.SetReadDeadline(time.Now().Add(detectionTime))
 	buffer := make([]byte, 1024)
 	_, _, err = conn.ReadFromUDP(buffer)
 	conn.Close()
