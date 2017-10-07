@@ -94,13 +94,14 @@ func Listen(port int, wg *sync.WaitGroup) {
 			default:
 				buffer := make([]byte, 1024)
 				conn, err := net.ListenUDP("udp", udpAddr)
-				//conn.SetReadDeadline(time.Now().Add(detectionTime))
+				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				if err != nil {
 					fmt.Println("ERROR: ", err, conn)
 				}
 				_ , _, err = conn.ReadFrom(buffer)
 				conn.Close()
-				//if err != nil {
+				if err != nil {
+					continue
 				//	fmt.Println("ERROR:", err)
 				//	currNode := memberList.GetNode(id)
 				//	fmt.Println(currNode, memberList, id)
@@ -115,7 +116,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				//	log.Printf("Machine %d failed at port %d", failedId, port)
 				//	go Cleanup(failedId)
 				//	continue
-				//}
+				}
 
 				buffer = bytes.Trim(buffer, "\x00")
 				if(len(buffer) == 0){
