@@ -361,6 +361,7 @@ func GetCurrentMembers(entryId int) {
 		log.Fatal("Error getting UDP address:", err)
 	}
 	conn, err := net.ListenUDP("udp", udpAddr)
+	defer conn.Close()
 	if err != nil {
 		log.Println("Error listening to addr: ", err)
 		return
@@ -377,7 +378,7 @@ func GetCurrentMembers(entryId int) {
 	if err != nil {
 		log.Fatal("Unmarshal2 error:", err)
 	}
-	conn.Close()
+
 	//merge membership lists
 	UpdateMembershipLists(hb.Machine)
 }
