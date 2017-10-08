@@ -207,7 +207,6 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	}
 
 	if status == JOIN {
-		fmt.Println("Merging list from 3 into list from 1")
 		memberList = MergeLists(memberList, recievedMemList)
 	} else {
 		memberList = MergeLists(recievedMemList, memberList)
@@ -224,7 +223,7 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 		idB := currB.GetId()
 		hbCountB := currB.GetHBCount()
 		timestampB := currB.GetTimestamp()
-
+		fmt.Println("FUCK")
 		if currA == nil {
 			if statusB == ALIVE {
 				log.Printf("Machine %d joined", idB)
