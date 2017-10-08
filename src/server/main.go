@@ -221,9 +221,7 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 		idB := currB.GetId()
 		hbCountB := currB.GetHBCount()
 		timestampB := currB.GetTimestamp()
-		//currA := A.GetNode(idB)
-		var currA *Node
-		currA = nil
+		currA := A.GetNode(idB)
 		if currA == nil {
 			if statusB == ALIVE {
 				log.Printf("Machine %d joined", idB)
