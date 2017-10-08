@@ -506,7 +506,7 @@ func getNeighbor(num int, currNode *Node, direction int) int {
 		} else if(num == 3) {
 			neighbor = ll
 		}
-		log.Println("NEIGHBOR: gossip", num, neighbor.GetId())
+		log.Println("NEIGHBOR: gossip", currNode.GetId(), num, neighbor.GetId())
 
 	} else {
 		if(num == 0) {
@@ -518,7 +518,7 @@ func getNeighbor(num int, currNode *Node, direction int) int {
 		} else if(num == 3) {
 			neighbor = rr
 		}
-		log.Println("NEIGHBOR: listen", num, neighbor.GetId())
+		log.Println("NEIGHBOR: listen", currNode.GetId(), num, neighbor.GetId())
 	}
 
 	if neighbor != nil && neighbor.GetId() != id {
