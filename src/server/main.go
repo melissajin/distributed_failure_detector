@@ -218,7 +218,7 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 	currB := B.GetHead()
 	fmt.Println("MergeLists 1", A, B, currB)
 	for currB != nil {
-		fmt.Println("MergeLists 2")
+		fmt.Println("MergeLists 2", currB.GetId())
 		currA := A.GetNode(currB.GetId())
 		fmt.Println("MergeLists 3", currA)
 		statusB := currB.GetStatus()
