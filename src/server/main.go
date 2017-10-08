@@ -144,7 +144,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				}
 
 				receivedMembershipList := hb.GetMachine()
-				UpdateMembershipLists(receivedMembershipList, UPDATE)
+				UpdateMembershipLists(receivedMembershipList, 1)
 
 				//receivedMachineId := int(hb.GetId())
 				//if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
@@ -213,7 +213,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	//}
 
 
-	if status == UPDATE {
+	if status == 1 {
 		memberList = MergeLists(memberList, recievedMemList)
 	} else {
 		memberList = recievedMemList
@@ -429,7 +429,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 					log.Fatal("Unmarshal error:", err)
 				}
 				receivedMembershipList := hb.GetMachine()
-				UpdateMembershipLists(receivedMembershipList, UPDATE)
+				UpdateMembershipLists(receivedMembershipList, 1)
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
 				newMachineAddr := getAddress(receivedMachineId, 8000+id)
@@ -486,7 +486,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	}
 
 	//merge membership lists
-	UpdateMembershipLists(hb.Machine, JOIN)
+	UpdateMembershipLists(hb.Machine, 2)
 }
 
 func getNeighbor(num int, currNode *Node) int {
