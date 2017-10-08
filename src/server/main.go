@@ -228,7 +228,9 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 			if statusB == ALIVE {
 				log.Printf("Machine %d joined", idB)
 				newNode := NewNode(idB, hbCountB, timestampB, statusB)
+				fmt.Println("CHECK")
 				A.Insert(newNode)
+				fmt.Println("CHECK2")
 			}
 		} else {
 			hbCountA := currA.GetHBCount()
@@ -261,13 +263,10 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 			//	}
 			//}
 		}
-		fmt.Println("CHECK")
 		currB = currB.Next()
 		if currB == B.GetHead() {
-			fmt.Println("CHECK2")
 			break
 		}
-		fmt.Println("CHECK3")
 	}
 	return A
 }
