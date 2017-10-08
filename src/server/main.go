@@ -207,7 +207,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	}
 
 	if status == UPDATE {
-		memberList = MergeLists(recievedMemList, recievedMemList)
+		memberList = MergeLists(memberList, recievedMemList)
 	} else {
 		memberList = recievedMemList
 	}
@@ -366,7 +366,7 @@ func Join() {
 		go GetCurrentMembers(entryMachineIds[i], &wg1)
 	}
 	wg1.Wait()
-
+	fmt.Println(memberList)
 	// start 4 threads to listen and 4 threads to gossip
 	var wg2 sync.WaitGroup
 	wg2.Add(8)
