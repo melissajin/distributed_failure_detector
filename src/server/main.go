@@ -30,8 +30,8 @@ const (
 )
 
 const (
-	UPDATE = 1
-	JOIN = 2
+	GOSSIP = 0
+	LISTEN = 1
 )
 func main() {
 	memberList = NewMembershipList()
@@ -101,7 +101,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				if currNode == nil {
 					continue
 				}
-				neighbor := getNeighbor(port-8000, currNode)
+				neighbor := getNeighbor(port-8000, currNode, LISTEN)
 				// TODO: only set deadline after machine joins
 				if(neighbor != 0) {
 					neighNode := memberList.GetNode(neighbor)
@@ -117,7 +117,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 							if currNode == nil {
 								continue
 							}
-							failedId := getNeighbor(port-8000, currNode)
+							failedId := getNeighbor(port-8000, currNode, LISTEN)
 							if failedId == 0 {
 								continue
 							}
@@ -138,7 +138,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 					continue
 				}
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
-				log.Println("LISTEN: received hb from ", neighbor)
+				log.Println("LISTEN: received hb from ", neighbor, " on ", port)
 				hb := &pb.Heartbeat{}
 				err = proto.Unmarshal(buffer, hb)
 				if err != nil {
@@ -281,7 +281,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 				//send heartbeat after certain duration
 				time.Sleep(heartbeatInterval)
 
-				receiverId := getNeighbor(port - 8000, currNode)
+				receiverId := getNeighbor(port - 8000, currNode, GOSSIP)
 				if receiverId == 0 {
 					continue
 				}
@@ -293,7 +293,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 					currNode.IncrementHBCounter()
 
 					hb := ConstructPBHeartbeat()
-					log.Println("GOSSIP: ", id, " send to ", receiverId)
+					log.Println("GOSSIP: ", id, " send to ", receiverId, " on ", port)
 					SendOnce(hb, receiverAddr)
 				}
 			}
@@ -471,7 +471,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	UpdateMembershipLists(hb.Machine)
 }
 
-func getNeighbor(num int, currNode *Node) int {
+func getNeighbor(num int, currNode *Node, direction int) int {
 	r, rr, l, ll := currNode.GetNeighbors()
 	_, id := GetIdentity()
 
@@ -481,47 +481,41 @@ func getNeighbor(num int, currNode *Node) int {
 	}
 
 	// 2 Nodes
-	if r.GetId() == l.GetId() {
-		if num == 0 {
-			return r.GetId()
-		} else {
-			return 0
-		}
+	if r.GetId() == l.GetId() && num > 0 {
+		return 0
 	}
 
 	// 3 Nodes
-	if rr.GetId() == l.GetId() {
-		if num == 0 {
-			return r.GetId()
-		} else if num == 1 {
-			return l.GetId()
-		} else {
-			return 0
-		}
+	if rr.GetId() == l.GetId() && num > 1 {
+		return 0
 	}
 
 	// 4 Nodes
-	if rr.GetId() == ll.GetId() {
-		if num == 0 {
-			return r.GetId()
-		} else if num == 1 {
-			return l.GetId()
-		} else if num == 2 {
-			return rr.GetId()
-		} else {
-			return 0
-		}
+	if rr.GetId() == ll.GetId() && num > 2 {
+		return 0
 	}
 
 	var neighbor *Node
-	if(num == 0) {
-		neighbor = rr
-	} else if(num == 1) {
-		neighbor = r
-	} else if(num == 2) {
-		neighbor = l
-	} else if(num == 3) {
-		neighbor = ll
+	if direction == GOSSIP {
+		if(num == 0) {
+			neighbor = r
+		} else if(num == 1) {
+			neighbor = l
+		} else if(num == 2) {
+			neighbor = rr
+		} else if(num == 3) {
+			neighbor = ll
+		}
+	} else {
+		if(num == 0) {
+			neighbor = l
+		} else if(num == 1) {
+			neighbor = r
+		} else if(num == 2) {
+			neighbor = ll
+		} else if(num == 3) {
+			neighbor = rr
+		}
 	}
 
 	if neighbor != nil && neighbor.GetId() != id {
