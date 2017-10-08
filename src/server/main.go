@@ -202,7 +202,6 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 	if memberList.Size() == 1 && recievedMemList.Size() != 1 {
 		id := memberList.GetHead().GetId()
 		memberList = recievedMemList
-		fmt.Println(memberList.GetNode(id), memberList.GetNode(id).Right, memberList.GetNode(id).Left)
 		log.Printf("Machine %d joined", id)
 	} else {
 		memberList = MergeLists(memberList, recievedMemList)
@@ -223,7 +222,6 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 				log.Printf("Machine %d joined", idB)
 				newNode := NewNode(idB, hbCountB, timestampB, statusB)
 				A.Insert(newNode)
-				fmt.Println(newNode, newNode.Right, newNode.Left)
 			}
 		} else {
 			hbCountA := currA.GetHBCount()
@@ -508,8 +506,6 @@ func getNeighbor(num int, currNode *Node, direction int) int {
 		} else if(num == 3) {
 			neighbor = ll
 		}
-		log.Println("NEIGHBOR: gossip", currNode.GetId(), num, neighbor.GetId())
-
 	} else {
 		if(num == 0) {
 			neighbor = l
@@ -520,7 +516,6 @@ func getNeighbor(num int, currNode *Node, direction int) int {
 		} else if(num == 3) {
 			neighbor = rr
 		}
-		log.Println("NEIGHBOR: listen", currNode.GetId(), num, neighbor.GetId())
 	}
 
 	if neighbor != nil && neighbor.GetId() != id {
