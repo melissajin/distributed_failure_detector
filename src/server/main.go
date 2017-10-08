@@ -105,7 +105,10 @@ func Listen(port int, wg *sync.WaitGroup) {
 				// TODO: only set deadline after machine joins
 				if(neighbor != 0) {
 					log.Println("Neighbor is: ", neighbor, " at port: ", port)
-
+					neighNode := memberList.GetNode(neighbor)
+					if neighNode.GetStatus() != ALIVE {
+						continue
+					}
 					_ , _, err = conn.ReadFrom(buffer)
 					// Timeout error, machine failed
 					if err != nil {
@@ -145,15 +148,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 
 				receivedMembershipList := hb.GetMachine()
 				UpdateMembershipLists(receivedMembershipList)
-
-				//receivedMachineId := int(hb.GetId())
-				//if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
-				//	// Send hb to new node with current membership list
-				//	entryHB := ConstructPBHeartbeat()
-				//	newMachineAddr := getAddress(receivedMachineId, 8000+id)
-				//	log.Println(id, " entry send to ", newMachineAddr)
-				//	SendOnce(entryHB, newMachineAddr)
-				//}
 			}
 		}
 	conn.Close()
