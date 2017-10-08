@@ -217,18 +217,12 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 // Merges the list B into the list A
 func MergeLists(A MembersList, B MembersList) MembersList {
 	currB := B.GetHead()
-	fmt.Println("MergeLists 1", A, B, currB)
 	for currB != nil {
-		fmt.Println("MergeLists 2", currB.GetId())
 		statusB := currB.GetStatus()
-		fmt.Println("MergeLists 4", statusB)
 		idB := currB.GetId()
-		fmt.Println("MergeLists 5", idB)
 		hbCountB := currB.GetHBCount()
-		fmt.Println("MergeLists 6", hbCountB)
 		timestampB := currB.GetTimestamp()
 		currA := A.GetNode(idB)
-		fmt.Println("MergeLists 3", currA)
 		if currA == nil {
 			if statusB == ALIVE {
 				log.Printf("Machine %d joined", idB)
@@ -429,7 +423,6 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 					log.Fatal("Unmarshal error:", err)
 				}
 				receivedMembershipList := hb.GetMachine()
-				log.Println("Received Entry HB from ", int(hb.Id))
 				UpdateMembershipLists(receivedMembershipList, UPDATE)
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
@@ -487,7 +480,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	}
 
 	//merge membership lists
-	UpdateMembershipLists(hb.Machine, JOIN)
+	//UpdateMembershipLists(hb.Machine, JOIN)
 }
 
 func getNeighbor(num int, currNode *Node) int {
