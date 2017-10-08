@@ -207,6 +207,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	}
 
 	if status == JOIN {
+		fmt.Println("Merging list from 3 into list from 1")
 		memberList = MergeLists(memberList, recievedMemList)
 	} else {
 		memberList = MergeLists(recievedMemList, memberList)
@@ -482,7 +483,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	}
 
 	//merge membership lists
-	UpdateMembershipLists(hb.Machine, JOIN)
+	UpdateMembershipLists(hb.Machine, UPDATE)
 }
 
 func getNeighbor(num int, currNode *Node) int {
