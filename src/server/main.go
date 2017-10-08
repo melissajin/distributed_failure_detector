@@ -482,7 +482,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	}
 
 	//merge membership lists
-	UpdateMembershipLists(hb.Machine, UPDATE)
+	UpdateMembershipLists(hb.Machine, JOIN)
 }
 
 func getNeighbor(num int, currNode *Node) int {
