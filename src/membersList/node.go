@@ -1,6 +1,8 @@
 package membersList
 
-import ()
+import (
+	"fmt"
+)
 
 // Status of machine
 const (
@@ -19,6 +21,7 @@ type Node struct {
 }
 
 func NewNode(id int, hbCount int, timestamp string, status int) * Node {
+	fmt.Println("CHECK")
 	return &Node{ id, hbCount, timestamp, nil, nil, status }
 }
 
