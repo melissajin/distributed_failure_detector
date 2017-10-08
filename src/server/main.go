@@ -26,7 +26,7 @@ const (
 	connections = 4
 	cleanupTime = time.Second * 6
 	detectionTime = time.Second * 2
-	heartbeatInterval = time.Millisecond * 100
+	heartbeatInterval = time.Millisecond * 300
 )
 
 const (
