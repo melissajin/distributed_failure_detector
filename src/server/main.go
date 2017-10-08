@@ -106,7 +106,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				if(neighbor != 0) {
 					log.Println("Neighbor is: ", neighbor, " at port: ", port)
 					neighNode := memberList.GetNode(neighbor)
-					if neighNode.GetStatus() != ALIVE {
+					if neighNode == nil || neighNode.GetStatus() != ALIVE {
 						continue
 					}
 					_ , _, err = conn.ReadFrom(buffer)
