@@ -30,10 +30,6 @@ const (
 	heartbeatInterval = time.Millisecond * 200
 )
 
-const (
-	GOSSIP = 0
-	LISTEN = 1
-)
 func main() {
 	memberList = NewMembershipList()
 	_, id := GetIdentity()
@@ -102,7 +98,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				if currNode == nil {
 					continue
 				}
-				neighbor := getNeighbor(port-8000, currNode, LISTEN)
+				neighbor := memberList.GetNeighbor(port-8000, currNode, RIGHT)
 				// TODO: only set deadline after machine joins
 				if(neighbor != 0) {
 					neighNode := memberList.GetNode(neighbor)
@@ -118,7 +114,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 							if currNode == nil {
 								continue
 							}
-							failedId := getNeighbor(port-8000, currNode, LISTEN)
+							failedId := memberList.GetNeighbor(port-8000, currNode, RIGHT)
 							if failedId == 0 {
 								continue
 							}
@@ -247,7 +243,7 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 					}
 			}
 		}
-		currB = B.Next(currB)
+		currB = B.Left(currB)
 		if currB == B.GetHead() {
 			break
 		}
@@ -282,7 +278,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 				//send heartbeat after certain duration
 				time.Sleep(heartbeatInterval)
 
-				receiverId := getNeighbor(port - 8000, currNode, GOSSIP)
+				receiverId := memberList.GetNeighbor(port - 8000, currNode, LEFT)
 				if receiverId == 0 {
 					continue
 				}
@@ -330,7 +326,7 @@ func ConstructPBHeartbeat() *pb.Heartbeat{
 		machine.Id = machineId
 		hb.Machine = append(hb.Machine, machine)
 
-		node = memberList.Next(node)
+		node = memberList.Left(node)
 		if node == head {
 			break
 		}
@@ -471,59 +467,106 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	UpdateMembershipLists(hb.Machine)
 }
 
-func getNeighbor(num int, currNode *Node, direction int) int {
-	r, rr, l, ll := memberList.GetNeighbors(currNode)
-	_, id := GetIdentity()
-
-	// 1 Node
-	if r.GetId() == id {
-		return 0
-	}
-
-	// 2 Nodes
-	if r.GetId() == l.GetId() && num > 0 {
-		return 0
-	}
-
-	// 3 Nodes
-	if rr.GetId() == l.GetId() && num > 1 {
-		return 0
-	}
-
-	// 4 Nodes
-	if rr.GetId() == ll.GetId() && num > 2 {
-		return 0
-	}
-
-	var neighbor *Node
-	if direction == GOSSIP {
-		if(num == 0) {
-			neighbor = r
-		} else if(num == 1) {
-			neighbor = l
-		} else if(num == 2) {
-			neighbor = rr
-		} else if(num == 3) {
-			neighbor = ll
-		}
-	} else {
-		if(num == 0) {
-			neighbor = l
-		} else if(num == 1) {
-			neighbor = r
-		} else if(num == 2) {
-			neighbor = ll
-		} else if(num == 3) {
-			neighbor = rr
-		}
-	}
-
-	if neighbor != nil && neighbor.GetId() != id {
-		return neighbor.GetId()
-	} else {
-		return 0
-	}
-}
+//func getNeighbor(num int, currNode *Node, direction int) int {
+//	r, rr, l, ll := memberList.GetNeighbors(currNode)
+//	_, id := GetIdentity()
+//
+//	neighbor := currNode
+//	if direction == GOSSIP {
+//		for i := -1; i < num; i++ {
+//			neighbor = memberList.Right(neighbor)
+//			for neighbor.GetStatus() != ALIVE {
+//				neighbor = memberList.Right(neighbor)
+//			}
+//			if neighbor == currNode {
+//				return 0
+//			}
+//		}
+//	} else {
+//		for i := -1; i < num; i++ {
+//			neighbor = memberList.Left(neighbor)
+//			for neighbor.GetStatus() != ALIVE {
+//				neighbor = memberList.Left(neighbor)
+//			}
+//			if neighbor == currNode {
+//				return 0
+//			}
+//		}
+//	}
+//
+	//// 1 Node
+	//if r.GetId() == id {
+	//	return 0
+	//}
+	//
+	//// 2 Nodes
+	//if r.GetId() == l.GetId() && num > 0 {
+	//	return 0
+	//}
+	//
+	//// 3 Nodes
+	//if rr.GetId() == l.GetId() && num > 1 {
+	//	return 0
+	//}
+	//
+	//// 4 Nodes
+	//if rr.GetId() == ll.GetId() && num > 2 {
+	//	return 0
+	//}
+	//
+	//var neighbor *Node
+	//if direction == GOSSIP {
+	//	if(num == 0) {
+	//		neighbor = r
+	//		for neighbor.GetStatus() != ALIVE {
+	//				neighbor = memberList.Right(neighbor)
+	//		}
+	//	} else if(num == 1) {
+	//		neighbor = l
+	//		for neighbor.GetStatus() != ALIVE {
+	//			neighbor = memberList.Left(neighbor)
+	//		}
+	//	} else if(num == 2) {
+	//		neighbor = rr
+	//		for neighbor.GetStatus() != ALIVE {
+	//			neighbor = memberList.Right(neighbor)
+	//		}
+	//	} else if(num == 3) {
+	//		neighbor = ll
+	//		for neighbor.GetStatus() != ALIVE {
+	//			neighbor = memberList.Left(neighbor)
+	//		}
+	//	}
+	//} else {
+	//	if(num == 0) {
+	//		neighbor = l
+	//		for neighbor.GetStatus() != ALIVE {
+	//			neighbor = memberList.Left(neighbor)
+	//		}
+	//	} else if(num == 1) {
+	//		neighbor = r
+	//		for neighbor.GetStatus() != ALIVE {
+	//			neighbor = memberList.Right(neighbor)
+	//		}
+	//	} else if(num == 2) {
+	//		neighbor = ll
+	//		for neighbor.GetStatus() != ALIVE {
+	//			neighbor = memberList.Left(neighbor)
+	//		}
+	//	} else if(num == 3) {
+	//		neighbor = rr
+	//		for neighbor.GetStatus() != ALIVE {
+	//			neighbor = memberList.Right(neighbor)
+	//		}
+	//	}
+	//}
+//
+//	if neighbor != nil && neighbor.GetId() != id {
+//		return neighbor.GetId()
+//	} else {
+//		return 0
+//	}
+//}
 
 func Leave() {
 	_, id := GetIdentity()

@@ -5,6 +5,11 @@ import (
 	"strconv"
 )
 
+const (
+	LEFT = 0
+	RIGHT = 1
+)
+
 type MembersList struct {
 	Head *Node
 	NodeMap map[int]*Node // Map of node id to node pointer
@@ -108,11 +113,46 @@ func (m *MembersList) Remove(id int) {
 	m.mu.Unlock()
 }
 
-func (m *MembersList) Next(n *Node) *Node {
+func (m *MembersList) Left(n *Node) *Node {
 	m.mu.Lock()
 	next := n.Left
 	m.mu.Unlock()
 	return next
+}
+
+func (m *MembersList) Right(n *Node) *Node {
+	m.mu.Lock()
+	next := n.Right
+	m.mu.Unlock()
+	return next
+}
+
+func (m *MembersList) GetNeighbor(num int, currNode *Node, direction int) int {
+	m.mu.Lock()
+	neighbor := currNode
+	if direction == RIGHT {
+		for i := -1; i < num; i++ {
+			neighbor = neighbor.Right
+			for neighbor.GetStatus() != ALIVE {
+				neighbor = neighbor.Right
+			}
+			if neighbor == currNode {
+				return 0
+			}
+		}
+	} else {
+		for i := -1; i < num; i++ {
+			neighbor = neighbor.Left
+			for neighbor.GetStatus() != ALIVE {
+				neighbor = neighbor.Left
+			}
+			if neighbor == currNode {
+				return 0
+			}
+		}
+	}
+	m.mu.Unlock()
+	return neighbor.Id
 }
 
 func (m *MembersList) GetNeighbors(n *Node) (*Node, *Node, *Node, *Node) {
