@@ -209,7 +209,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	if status == UPDATE {
 		memberList = MergeLists(memberList, recievedMemList)
 	} else {
-		memberList = MergeLists(recievedMemList, memberList)
+		memberList = recievedMemList
 	}
 }
 
