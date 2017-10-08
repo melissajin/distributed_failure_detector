@@ -144,7 +144,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				}
 
 				receivedMembershipList := hb.GetMachine()
-				UpdateMembershipLists(receivedMembershipList, 1)
+				UpdateMembershipLists(receivedMembershipList)
 
 				//receivedMachineId := int(hb.GetId())
 				//if(len(receivedMembershipList) == 1 && Contains(entryMachineIds, id)) {
@@ -192,7 +192,7 @@ func Cleanup(id int) {
 	}
 }
 
-func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
+func UpdateMembershipLists(receivedList []*pb.Machine) {
 
 	recievedMemList := NewMembershipList()
 
@@ -207,19 +207,12 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	}
 
 	if memberList.Size() == 1 && recievedMemList.Size() != 1 {
-		//fmt.Println("CHECKA")
+		id := memberList.GetHead().GetId()
 		memberList = recievedMemList
-		//memberList = MergeLists(recievedMemList, memberList)
+		log.Printf("Machine %d joined", id)
 	} else {
-		//fmt.Println("CHECKB")
 		memberList = MergeLists(memberList, recievedMemList)
 	}
-
-	/*if status == 1 {
-		memberList = MergeLists(memberList, recievedMemList)
-	} else {
-		memberList = recievedMemList
-	}*/
 }
 
 // Merges the list B into the list A
@@ -268,7 +261,7 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 			//	}
 			//}
 		}
-		currB = currB.Next()
+		currB = B.Next(currB)
 		if currB == B.GetHead() {
 			break
 		}
@@ -349,7 +342,7 @@ func ConstructPBHeartbeat() *pb.Heartbeat{
 		machine.Id = machineId
 		hb.Machine = append(hb.Machine, machine)
 
-		node = node.Next()
+		node = memberList.Next(node)
 		if node == head {
 			break
 		}
@@ -431,7 +424,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 					log.Fatal("Unmarshal error:", err)
 				}
 				receivedMembershipList := hb.GetMachine()
-				UpdateMembershipLists(receivedMembershipList, 1)
+				UpdateMembershipLists(receivedMembershipList)
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
 				newMachineAddr := getAddress(receivedMachineId, 8000+id)
@@ -488,7 +481,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	}
 
 	//merge membership lists
-	UpdateMembershipLists(hb.Machine, 2)
+	UpdateMembershipLists(hb.Machine)
 }
 
 func getNeighbor(num int, currNode *Node) int {
