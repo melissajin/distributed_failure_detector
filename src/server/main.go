@@ -74,8 +74,8 @@ func main() {
 			go Leave()
 		} else if(strings.Contains(text, "list")) {
 			_, id = GetIdentity()
-			node = memberList.GetNode(id)
-			if(node == nil || node.GetStatus() != ALIVE {
+			node := memberList.GetNode(id)
+			if node == nil || node.GetStatus() != ALIVE {
 				fmt.Print("Not joined\n")
 			} else {
 				list := memberList.Read()
