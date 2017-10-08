@@ -16,6 +16,7 @@ import (
 	"bytes"
 	"sync"
 	"math"
+	"math/rand"
 )
 
 var memberList MembersList
@@ -56,7 +57,6 @@ var messagesRecieved Counter
 var messagesSent Counter
 
 /* used to simulate message loss */
-var messageCount Counter
 func simMessageLoss(percentage int) bool {
 	if percentage <= 0 {
 		return true
@@ -64,12 +64,14 @@ func simMessageLoss(percentage int) bool {
 
 	failOn := 100 / percentage
 
-	if(messageCount.x == failOn) {
-		messageCount.Reset()
+	s1 := rand.NewSource(time.Now().UnixNano())
+    r1 := rand.New(s1)
+    randNum := r1.Intn(failOn)
+
+	if(randNum == failOn-1) {
 		return false
 	}
 
-	messageCount.Add(1)
 	return true
 }
 
