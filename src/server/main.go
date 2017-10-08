@@ -26,7 +26,7 @@ const (
 	connections = 4
 	cleanupTime = time.Second * 6
 	detectionTime = time.Second * 2
-	heartbeatInterval = time.Millisecond * 300
+	heartbeatInterval = time.Millisecond * 500
 )
 
 const (
@@ -104,7 +104,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 				neighbor := getNeighbor(port-8000, currNode)
 				// TODO: only set deadline after machine joins
 				if(neighbor != 0) {
-					log.Println("Neighbor is: ", neighbor, " at port: ", port)
 					neighNode := memberList.GetNode(neighbor)
 					if neighNode == nil || neighNode.GetStatus() != ALIVE {
 						continue
