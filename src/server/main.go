@@ -138,7 +138,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 					continue
 				}
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
-
+				log.Println("LISTEN: received hb from ", neighbor)
 				hb := &pb.Heartbeat{}
 				err = proto.Unmarshal(buffer, hb)
 				if err != nil {
@@ -293,7 +293,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 					currNode.IncrementHBCounter()
 
 					hb := ConstructPBHeartbeat()
-					log.Println(id, " gossip to ", receiverAddr)
+					log.Println("GOSSIP: ", id, " send to ", receiverId)
 					SendOnce(hb, receiverAddr)
 				}
 			}
@@ -301,7 +301,6 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 }
 
 func SendOnce(hb *pb.Heartbeat, addr string) {
-	log.Println("Send once", addr)
 	conn, err := net.Dial("udp", addr)
 	if err != nil {
 		log.Fatal("Error connecting to server: ", err)
