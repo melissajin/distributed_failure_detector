@@ -236,30 +236,22 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 			timestampA := currA.GetTimestamp()
 
 			if timestampB == timestampA {
-				if (statusB == LEAVE || statusB == FAILED) && statusA == ALIVE {
-					currA.SetStatus(statusB)
-					go Cleanup(idB)
-				} else if statusA == ALIVE && statusB == ALIVE {
-					currA.SetHBCounter(int(math.Max(float64(hbCountA), float64(hbCountB))))
-				} else if statusA == FAILED && statusB == ALIVE {
-					log.Println("Falsely detected failure at machine ", idB)
-				}
+				if statusA == ALIVE {
+					if statusB == LEAVE {
+						log.Printf("Machine %d left", idB)
+						currA.SetStatus(statusB)
+						go Cleanup(idB)
+					} else if statusB == FAILED {
+						log.Printf("Detected failure at machine %d", idB)
+						currA.SetStatus(statusB)
+						go Cleanup(idB)
+					} else if statusB == ALIVE {
+						currA.SetHBCounter(int(math.Max(float64(hbCountA), float64(hbCountB))))
+					}
+				} else if statusB == ALIVE {
+						log.Println("Falsely detected failure at machine ", idB)
+					}
 			}
-			//if((statusB == LEAVE || statusB == FAILED) && timestampB == timestampA) {
-			//	go Cleanup(idB)
-			//	currA.SetStatus(statusB)
-			//} else if hbCountA < hbCountB {
-			//	// Log falsely detected failure
-			//	if statusA == FAILED && statusB == ALIVE && timestampA == timestampB {
-			//		log.Println("Falsely detected failure at machine ", idB)
-			//	} else {
-			//		if statusB == LEAVE || statusB == FAILED {
-			//			go Cleanup(idB)
-			//		}
-			//		currA.SetHBCounter(hbCountB)
-			//		currA.SetStatus(statusB)
-			//	}
-			//}
 		}
 		currB = B.Next(currB)
 		if currB == B.GetHead() {
