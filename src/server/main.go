@@ -394,7 +394,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 
 			default:
 				buffer := make([]byte, 1024)
-
+				log.Println("BEFORE DEADLINE: ", time.Now())
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				_ , _, err = conn.ReadFrom(buffer)
 				if err != nil {
@@ -410,6 +410,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				if err != nil {
 					log.Fatal("Unmarshal error:", err)
 				}
+				log.Println("AFTER DEADLINE: ", time.Now())
 				receivedMembershipList := hb.GetMachine()
 				UpdateMembershipLists(receivedMembershipList)
 				entryHB := ConstructPBHeartbeat()
