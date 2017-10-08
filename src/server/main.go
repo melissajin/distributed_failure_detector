@@ -345,6 +345,8 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 					
 					if simMessageLoss(messageLossRate) == true {
 						SendOnce(hb, receiverAddr)
+					} else {
+						log.Println("Dropped packet")
 					}
 				}
 			}
