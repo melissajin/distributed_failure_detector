@@ -217,11 +217,11 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 func MergeLists(A MembersList, B MembersList) MembersList {
 	currB := B.GetHead()
 	for currB != nil {
+		currA := A.GetNode(currB.GetId())
 		statusB := currB.GetStatus()
 		idB := currB.GetId()
 		hbCountB := currB.GetHBCount()
 		timestampB := currB.GetTimestamp()
-		currA := A.GetNode(idB)
 		if currA == nil {
 			if statusB == ALIVE {
 				log.Printf("Machine %d joined", idB)
