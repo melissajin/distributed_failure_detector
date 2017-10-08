@@ -30,8 +30,8 @@ const (
 )
 
 const (
-	UPDATE = iota
-	JOIN
+	UPDATE = 1
+	JOIN = 2
 )
 func main() {
 	memberList = NewMembershipList()
@@ -206,18 +206,18 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 		recievedMemList.Insert(newNode)
 	}
 
-	if memberList.Size() == 1 && recievedMemList.Size() != 1 {
-		memberList = MergeLists(recievedMemList, memberList)
-	} else {
+	//if memberList.Size() == 1 && recievedMemList.Size() != 1 {
+	//	memberList = MergeLists(recievedMemList, memberList)
+	//} else {
+	//	memberList = MergeLists(memberList, recievedMemList)
+	//}
+
+
+	if status == UPDATE {
 		memberList = MergeLists(memberList, recievedMemList)
+	} else {
+		memberList = recievedMemList
 	}
-
-
-	/*	if status == UPDATE {
-			memberList = MergeLists(memberList, recievedMemList)
-		} else {
-			memberList = recievedMemList
-		}*/
 }
 
 // Merges the list B into the list A
