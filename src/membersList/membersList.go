@@ -3,7 +3,7 @@ package membersList
 import (
 	"sync"
 	"strconv"
-	"fmt"
+	//"fmt"
 )
 
 type MembersList struct {
@@ -31,13 +31,13 @@ func (m *MembersList) SetHead(newHead *Node) {
 }
 
 func (m *MembersList) GetNode(id int) *Node {
-	fmt.Println("GetNode 1")
+	//fmt.Println("GetNode 1")
 	m.mu.Lock()
-	fmt.Println("GetNode 2")
+	//fmt.Println("GetNode 2")
 	node := m.NodeMap[id]
-	fmt.Println("GetNode 3", node)
+	//fmt.Println("GetNode 3", node)
 	m.mu.Unlock()
-	fmt.Println("GetNode 4")
+	//fmt.Println("GetNode 4")
 	return node
 }
 
