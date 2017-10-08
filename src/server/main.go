@@ -212,12 +212,12 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	//	memberList = MergeLists(memberList, recievedMemList)
 	//}
 
-
-	if status == 1 {
+	memberList = MergeLists(memberList, recievedMemList)
+	/*if status == 1 {
 		memberList = MergeLists(memberList, recievedMemList)
 	} else {
 		memberList = recievedMemList
-	}
+	}*/
 }
 
 // Merges the list B into the list A
