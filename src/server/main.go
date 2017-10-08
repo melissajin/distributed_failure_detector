@@ -97,12 +97,13 @@ func Listen(port int, wg *sync.WaitGroup) {
 				break ListenLoop
 			default:
 				buffer := make([]byte, 1024)
-				currNode := memberList.GetNode(id)
-				if currNode == nil {
-					continue
-				}
-				neighbor := getNeighbor(port-8000, currNode)
+				//currNode := memberList.GetNode(id)
+				//if currNode == nil {
+				//	continue
+				//}
+				//neighbor := getNeighbor(port-8000, currNode)
 				// TODO: only set deadline after machine joins
+				neighbor := 0
 				if(neighbor != 0) {
 					log.Println("Neighbor is: ", neighbor, " at port: ", port)
 					conn.SetReadDeadline(time.Now().Add(detectionTime))
@@ -216,15 +217,15 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 // Merges the list B into the list A
 func MergeLists(A MembersList, B MembersList) MembersList {
 	currB := B.GetHead()
-	//fmt.Println("MergeLists 1", A, B, currB)
+	fmt.Println("MergeLists 1", A, B, currB)
 	for currB != nil {
-	//	fmt.Println("MergeLists 2", currB.GetId())
+		fmt.Println("MergeLists 2", currB.GetId())
 		statusB := currB.GetStatus()
-	//	fmt.Println("MergeLists 4", statusB)
+		fmt.Println("MergeLists 4", statusB)
 		idB := currB.GetId()
-	//	fmt.Println("MergeLists 5", idB)
+		fmt.Println("MergeLists 5", idB)
 		hbCountB := currB.GetHBCount()
-	//	fmt.Println("MergeLists 6", hbCountB)
+		fmt.Println("MergeLists 6", hbCountB)
 		timestampB := currB.GetTimestamp()
 		currA := A.GetNode(idB)
 		fmt.Println("MergeLists 3", currA)
