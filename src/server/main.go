@@ -164,7 +164,7 @@ func Contains(arr []int, num int) bool {
 }
 
 func getAddress(machineNum int, portNum int) string {
-	machineStr := strconv(machineNum)
+	machineStr := strconv.Itoa(machineNum)
 	if(machineNum < 10) {
 		machineStr = "0" + machineStr
 	}
