@@ -202,6 +202,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 	if memberList.Size() == 1 && recievedMemList.Size() != 1 {
 		id := memberList.GetHead().GetId()
 		memberList = recievedMemList
+		fmt.Println(memberList)
 		log.Printf("Machine %d joined", id)
 	} else {
 		memberList = MergeLists(memberList, recievedMemList)
