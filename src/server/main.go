@@ -29,7 +29,7 @@ const (
 	detectionTime = time.Second * 2
 	startupTime = time.Second * 1
 	heartbeatInterval = time.Millisecond * 400
-	messageLossRate = 30
+	messageLossRate = 10
 )
 
 type Counter struct {
