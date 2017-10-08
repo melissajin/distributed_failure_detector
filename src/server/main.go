@@ -395,7 +395,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 			default:
 				buffer := make([]byte, 1024)
 
-				//conn.SetReadDeadline(time.Now().Add(detectionTime))
+				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				_ , _, err = conn.ReadFrom(buffer)
 				if err != nil {
 					continue
