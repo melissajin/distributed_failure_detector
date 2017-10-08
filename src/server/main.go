@@ -28,6 +28,7 @@ const (
 	detectionTime = time.Second * 2
 	startupTime = time.Second * 1
 	heartbeatInterval = time.Millisecond * 200
+	messageLossRate = 0
 )
 
 type Counter struct {
@@ -44,10 +45,34 @@ func (c *Counter) Add(x int) {
     c.mu.Unlock()
 }
 
-/* This global variable keeps track of the total number of lines outputted
-   by grep from all the connected machines*/
+func(c *Counter) Reset() {
+	c.mu.Lock()
+    c.x = 0
+    c.mu.Unlock()
+}
+
+/* Global variables to keep track of total messages sent and recieved at a machine */
 var messagesRecieved Counter
 var messagesSent Counter
+
+/* used to simulate message loss */
+var messageCount Counter
+func simMessageLoss(percentage int) bool {
+	if percentage <= 0 {
+		return true
+	}
+
+	failOn := 100 / percentage
+
+	if(messageCount.x == failOn) {
+		messageCount.Reset()
+		return false
+	}
+
+	messageCount.Add(1)
+	return true
+}
+
 
 func main() {
 	memberList = NewMembershipList()
@@ -317,7 +342,10 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 					hb := ConstructPBHeartbeat()
 					messagesSent.Add(1)
 					log.Println("GOSSIP: ", id, "send to", receiverId, "on", port, "Total Sent:", messagesSent.x)
-					SendOnce(hb, receiverAddr)
+					
+					if simMessageLoss(messageLossRate) == true {
+						SendOnce(hb, receiverAddr)
+					}
 				}
 			}
 		}
