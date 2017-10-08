@@ -53,7 +53,7 @@ func (m *MembersList) Read() [] string {
 			member := "Machine Id: " + id + " Timestamp: " + ts
 			list = append(list, member)
 		}
-		node = node.Right
+		node = node.Left
 		if node == m.Head {
 			break
 		}
@@ -155,24 +155,4 @@ func (m *MembersList) GetNeighbor(num int, currNode *Node, direction int) int {
 	}
 	m.mu.Unlock()
 	return neighbor.Id
-}
-
-func (m *MembersList) GetNeighbors(n *Node) (*Node, *Node, *Node, *Node) {
-	m.mu.Lock()
-	r := n.Right
-	l := n.Left
-
-	var rr *Node
-	var ll *Node
-	rr = nil
-	ll = nil
-
-	if r != nil {
-		rr = r.Right
-	}
-	if l != nil {
-		ll = l.Left
-	}
-	m.mu.Unlock()
-	return r, rr, l, ll
 }

@@ -25,7 +25,7 @@ var entryMachineIds = []int{1,2,3,4,5}
 const (
 	connections = 4
 	cleanupTime = time.Second * 6
-	detectionTime = time.Second * 4
+	detectionTime = time.Second * 2
 	startupTime = time.Second * 1
 	heartbeatInterval = time.Millisecond * 200
 )
@@ -50,10 +50,11 @@ func main() {
 		text := string(command)
 
 		if(strings.Contains(text, "join")) {
-			go Join() //TODO: might need to use thread
+			go Join()
 		} else if(strings.Contains(text, "leave")) {
-			go Leave() //TODO: might need to use thread
+			go Leave()
 		} else if(strings.Contains(text, "list")) {
+			// TODO: if currNode is not alive, print not joined
 			if(memberList.Size() == 0){
 				fmt.Print("Not joined\n")
 			} else {
@@ -163,9 +164,9 @@ func Contains(arr []int, num int) bool {
 }
 
 func getAddress(machineNum int, portNum int) string {
-	var machineStr string
+	machineStr := strconv(machineNum)
 	if(machineNum < 10) {
-		machineStr = "0" + strconv.Itoa(machineNum)
+		machineStr = "0" + machineStr
 	}
 	return "fa17-cs425-g46-" + machineStr +".cs.illinois.edu:" + strconv.Itoa(portNum)
 }
@@ -289,7 +290,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 				if receiverNode != nil && receiverNode.GetStatus() == ALIVE {
 					receiverAddr := getAddress(receiverId, port)
 
-					//increment heartbeat counter for node sending hb
+					// Increment heartbeat counter for node sending hb
 					currNode.IncrementHBCounter()
 
 					hb := ConstructPBHeartbeat()
@@ -469,107 +470,6 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	//merge membership lists
 	UpdateMembershipLists(hb.Machine)
 }
-
-//func getNeighbor(num int, currNode *Node, direction int) int {
-//	r, rr, l, ll := memberList.GetNeighbors(currNode)
-//	_, id := GetIdentity()
-//
-//	neighbor := currNode
-//	if direction == GOSSIP {
-//		for i := -1; i < num; i++ {
-//			neighbor = memberList.Right(neighbor)
-//			for neighbor.GetStatus() != ALIVE {
-//				neighbor = memberList.Right(neighbor)
-//			}
-//			if neighbor == currNode {
-//				return 0
-//			}
-//		}
-//	} else {
-//		for i := -1; i < num; i++ {
-//			neighbor = memberList.Left(neighbor)
-//			for neighbor.GetStatus() != ALIVE {
-//				neighbor = memberList.Left(neighbor)
-//			}
-//			if neighbor == currNode {
-//				return 0
-//			}
-//		}
-//	}
-//
-	//// 1 Node
-	//if r.GetId() == id {
-	//	return 0
-	//}
-	//
-	//// 2 Nodes
-	//if r.GetId() == l.GetId() && num > 0 {
-	//	return 0
-	//}
-	//
-	//// 3 Nodes
-	//if rr.GetId() == l.GetId() && num > 1 {
-	//	return 0
-	//}
-	//
-	//// 4 Nodes
-	//if rr.GetId() == ll.GetId() && num > 2 {
-	//	return 0
-	//}
-	//
-	//var neighbor *Node
-	//if direction == GOSSIP {
-	//	if(num == 0) {
-	//		neighbor = r
-	//		for neighbor.GetStatus() != ALIVE {
-	//				neighbor = memberList.Right(neighbor)
-	//		}
-	//	} else if(num == 1) {
-	//		neighbor = l
-	//		for neighbor.GetStatus() != ALIVE {
-	//			neighbor = memberList.Left(neighbor)
-	//		}
-	//	} else if(num == 2) {
-	//		neighbor = rr
-	//		for neighbor.GetStatus() != ALIVE {
-	//			neighbor = memberList.Right(neighbor)
-	//		}
-	//	} else if(num == 3) {
-	//		neighbor = ll
-	//		for neighbor.GetStatus() != ALIVE {
-	//			neighbor = memberList.Left(neighbor)
-	//		}
-	//	}
-	//} else {
-	//	if(num == 0) {
-	//		neighbor = l
-	//		for neighbor.GetStatus() != ALIVE {
-	//			neighbor = memberList.Left(neighbor)
-	//		}
-	//	} else if(num == 1) {
-	//		neighbor = r
-	//		for neighbor.GetStatus() != ALIVE {
-	//			neighbor = memberList.Right(neighbor)
-	//		}
-	//	} else if(num == 2) {
-	//		neighbor = ll
-	//		for neighbor.GetStatus() != ALIVE {
-	//			neighbor = memberList.Left(neighbor)
-	//		}
-	//	} else if(num == 3) {
-	//		neighbor = rr
-	//		for neighbor.GetStatus() != ALIVE {
-	//			neighbor = memberList.Right(neighbor)
-	//		}
-	//	}
-	//}
-//
-//	if neighbor != nil && neighbor.GetId() != id {
-//		return neighbor.GetId()
-//	} else {
-//		return 0
-//	}
-//}
 
 func Leave() {
 	_, id := GetIdentity()
