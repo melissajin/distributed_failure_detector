@@ -137,6 +137,7 @@ func (m *MembersList) GetNeighbor(num int, currNode *Node, direction int) int {
 				neighbor = neighbor.Right
 			}
 			if neighbor == currNode {
+				m.mu.Unlock()
 				return 0
 			}
 		}
@@ -147,6 +148,7 @@ func (m *MembersList) GetNeighbor(num int, currNode *Node, direction int) int {
 				neighbor = neighbor.Left
 			}
 			if neighbor == currNode {
+				m.mu.Unlock()
 				return 0
 			}
 		}
