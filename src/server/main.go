@@ -27,7 +27,7 @@ const (
 	cleanupTime = time.Second * 6
 	detectionTime = time.Second * 2
 	startupTime = time.Second * 1
-	heartbeatInterval = time.Millisecond * 700
+	heartbeatInterval = time.Millisecond * 500
 	messageLossRate = 30
 )
 
