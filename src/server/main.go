@@ -30,6 +30,25 @@ const (
 	heartbeatInterval = time.Millisecond * 200
 )
 
+type Counter struct {
+    mu  sync.Mutex
+    x   int
+}
+
+/**
+ * Atomic add for type Counter
+ */
+func (c *Counter) Add(x int) {
+    c.mu.Lock()
+    c.x += x
+    c.mu.Unlock()
+}
+
+/* This global variable keeps track of the total number of lines outputted
+   by grep from all the connected machines*/
+var messagesRecieved Counter
+var messagesSent Counter
+
 func main() {
 	memberList = NewMembershipList()
 	_, id := GetIdentity()
@@ -54,8 +73,9 @@ func main() {
 		} else if(strings.Contains(text, "leave")) {
 			go Leave()
 		} else if(strings.Contains(text, "list")) {
-			// TODO: if currNode is not alive, print not joined
-			if(memberList.Size() == 0){
+			_, id = GetIdentity()
+			node = memberList.GetNode(id)
+			if(node == nil || node.GetStatus() != ALIVE {
 				fmt.Print("Not joined\n")
 			} else {
 				list := memberList.Read()
@@ -139,7 +159,8 @@ func Listen(port int, wg *sync.WaitGroup) {
 					continue
 				}
 
-				log.Println("LISTEN: received hb from ", neighbor, " on ", port)
+				messagesRecieved.Add(1)
+				log.Println("LISTEN: received hb from ", neighbor, " on ", port, "Total recieved: ", messagesRecieved.x)
 				hb := &pb.Heartbeat{}
 				err = proto.Unmarshal(buffer, hb)
 				if err != nil {
@@ -294,7 +315,8 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 					currNode.IncrementHBCounter()
 
 					hb := ConstructPBHeartbeat()
-					log.Println("GOSSIP: ", id, " send to ", receiverId, " on ", port)
+					messagesSent.Add(1)
+					log.Println("GOSSIP: ", id, "send to", receiverId, "on", port, "Total Sent:", messagesSent.x)
 					SendOnce(hb, receiverAddr)
 				}
 			}
@@ -415,7 +437,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
 				newMachineAddr := getAddress(receivedMachineId, 8000+id)
-				log.Println(id, " entry send to ", newMachineAddr)
+				log.Println(id, " send entry hb to ", newMachineAddr)
 				SendOnce(entryHB, newMachineAddr)
 			}
 		}
@@ -450,7 +472,6 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 		conn.Close()
 		return
 	}
-	//defer conn.Close()
 
 	conn.SetReadDeadline(time.Now().Add(startupTime))
 	buffer := make([]byte, 1024)
@@ -467,7 +488,6 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 		log.Fatal("Unmarshal2 error:", err)
 	}
 
-	//merge membership lists
 	UpdateMembershipLists(hb.Machine)
 }
 
@@ -479,6 +499,7 @@ func Leave() {
 	leaveNode.SetStatus(LEAVE)
 
 	log.Printf("Machine %d left", id)
+
 	// Kill goroutines for sending and receiving heartbeats
 	close(leave)
 }
