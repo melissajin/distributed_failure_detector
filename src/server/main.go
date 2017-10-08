@@ -226,7 +226,7 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 		hbCountB := currB.GetHBCount()
 		fmt.Println("MergeLists 6", hbCountB)
 		timestampB := currB.GetTimestamp()
-		currA := A.GetNode(currB.GetId())
+		currA := A.GetNode(idB)
 		fmt.Println("MergeLists 3", currA)
 		if currA == nil {
 			if statusB == ALIVE {
