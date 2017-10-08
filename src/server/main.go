@@ -429,6 +429,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				}
 
 				receivedMembershipList := hb.GetMachine()
+				fmt.Println("CHECK")
 				UpdateMembershipLists(receivedMembershipList, UPDATE)
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
