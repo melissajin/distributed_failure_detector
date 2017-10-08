@@ -207,7 +207,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	}
 
 	if status == UPDATE {
-		memberList = MergeLists(memberList, recievedMemList)
+		memberList = MergeLists(recievedMemList, recievedMemList)
 	} else {
 		memberList = recievedMemList
 	}
@@ -228,9 +228,7 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 			if statusB == ALIVE {
 				log.Printf("Machine %d joined", idB)
 				newNode := NewNode(idB, hbCountB, timestampB, statusB)
-				fmt.Println("CHECK2")
 				A.Insert(newNode)
-				fmt.Println("CHECK")
 			}
 		} else {
 			hbCountA := currA.GetHBCount()
