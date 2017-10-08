@@ -218,12 +218,17 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 	currB := B.GetHead()
 	fmt.Println("MergeLists 1", A, B, currB)
 	for currB != nil {
+		fmt.Println("MergeLists 2")
 		currA := A.GetNode(currB.GetId())
+		fmt.Println("MergeLists 3", currA)
 		statusB := currB.GetStatus()
+		fmt.Println("MergeLists 4", statusB)
 		idB := currB.GetId()
+		fmt.Println("MergeLists 5", idB)
 		hbCountB := currB.GetHBCount()
+		fmt.Println("MergeLists 6", hbCountB)
 		timestampB := currB.GetTimestamp()
-		fmt.Println("MergeLists 2", currA)
+		fmt.Println("MergeLists 7", currA)
 		if currA == nil {
 			if statusB == ALIVE {
 				log.Printf("Machine %d joined", idB)
