@@ -261,10 +261,13 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 			//	}
 			//}
 		}
+		fmt.Println("CHECK")
 		currB = currB.Next()
 		if currB == B.GetHead() {
+			fmt.Println("CHECK2")
 			break
 		}
+		fmt.Println("CHECK3")
 	}
 	return A
 }
@@ -425,7 +428,6 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				}
 				receivedMembershipList := hb.GetMachine()
 				UpdateMembershipLists(receivedMembershipList, UPDATE)
-				fmt.Println("CHECK")
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
 				newMachineAddr := getAddress(receivedMachineId, 8000+id)
