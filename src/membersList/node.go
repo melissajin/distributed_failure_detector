@@ -32,24 +32,6 @@ func (n *Node) GetTimestamp() string {
 	return n.Timestamp
 }
 
-func (n *Node) GetNeighbors() (*Node, *Node, *Node, *Node) {
-	r := n.Right
-	l := n.Left
-
-	var rr *Node
-	var ll *Node
-	rr = nil
-	ll = nil
-
-	if r != nil {
-		rr = r.Right
-	}
-	if l != nil {
-		ll = l.Left
-	}
-	return r, rr, l, ll
-}
-
 func (n *Node) GetStatus() int {
 	return n.Status
 }

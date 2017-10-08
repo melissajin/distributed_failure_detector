@@ -114,3 +114,23 @@ func (m *MembersList) Next(n *Node) *Node {
 	m.mu.Unlock()
 	return next
 }
+
+func (m *MembersList) GetNeighbors(n *Node) (*Node, *Node, *Node, *Node) {
+	m.mu.Lock()
+	r := n.Right
+	l := n.Left
+
+	var rr *Node
+	var ll *Node
+	rr = nil
+	ll = nil
+
+	if r != nil {
+		rr = r.Right
+	}
+	if l != nil {
+		ll = l.Left
+	}
+	m.mu.Unlock()
+	return r, rr, l, ll
+}

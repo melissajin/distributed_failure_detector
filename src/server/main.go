@@ -472,7 +472,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 }
 
 func getNeighbor(num int, currNode *Node, direction int) int {
-	r, rr, l, ll := currNode.GetNeighbors()
+	r, rr, l, ll := memberList.GetNeighbors(currNode)
 	_, id := GetIdentity()
 
 	// 1 Node
