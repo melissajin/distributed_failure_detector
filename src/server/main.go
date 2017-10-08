@@ -207,11 +207,12 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 	}
 
 	if memberList.Size() == 1 && recievedMemList.Size() != 1 {
-		fmt.Println("CHECKA")
+		//fmt.Println("CHECKA")
 		memberList = MergeLists(recievedMemList, memberList)
 	} else {
-		fmt.Println("CHECKB")
-		memberList = MergeLists(memberList, recievedMemList)
+		//fmt.Println("CHECKB")
+		memberList = recievedMemList
+		//memberList = MergeLists(memberList, recievedMemList)
 	}
 
 	/*if status == 1 {
