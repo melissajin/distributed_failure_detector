@@ -48,7 +48,7 @@ func (m *MembersList) Read() [] string {
 			member := "Machine Id: " + id + " Timestamp: " + ts
 			list = append(list, member)
 		}
-		node = node.Next()
+		node = node.Right
 		if node == m.Head {
 			break
 		}
