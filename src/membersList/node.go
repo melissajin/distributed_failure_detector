@@ -70,7 +70,3 @@ func (n *Node) SetNeighbors(right *Node, left *Node) {
 func (n *Node) SetStatus(status int) {
 	n.Status = status
 }
-
-func (n *Node) Next() *Node {
-	return n.Right
-}
