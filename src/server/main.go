@@ -428,8 +428,8 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				if err != nil {
 					log.Fatal("Unmarshal error:", err)
 				}
-
 				receivedMembershipList := hb.GetMachine()
+				log.Println("Received Entry HB from ", int(hb.Id))
 				UpdateMembershipLists(receivedMembershipList, UPDATE)
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
