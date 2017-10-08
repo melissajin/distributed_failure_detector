@@ -74,11 +74,11 @@ func (m *MembersList) Insert(newNode *Node) {
 		newNode.Right = m.Head
 		newNode.Left = m.Head
 	} else{
-		newNode.Left = m.Head.Left
-		newNode.Right = m.Head
+		newNode.Right = m.Head.Right
+		newNode.Left = m.Head
 
-		m.Head.Left.Right = newNode
-		m.Head.Left = newNode
+		m.Head.Right.Left = newNode
+		m.Head.Right = newNode
 	}
 	m.NodeMap[id] = newNode
 	m.mu.Unlock()
