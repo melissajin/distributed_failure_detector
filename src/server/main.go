@@ -105,6 +105,8 @@ func Listen(port int, wg *sync.WaitGroup) {
 					if neighNode == nil || neighNode.GetStatus() != ALIVE {
 						continue
 					}
+					
+					conn.SetReadDeadline(time.Now().Add(detectionTime))
 					_ , _, err = conn.ReadFrom(buffer)
 					// Timeout error, machine failed
 					if err != nil {
@@ -135,7 +137,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				if(len(buffer) == 0){
 					continue
 				}
-				conn.SetReadDeadline(time.Now().Add(detectionTime))
+
 				log.Println("LISTEN: received hb from ", neighbor, " on ", port)
 				hb := &pb.Heartbeat{}
 				err = proto.Unmarshal(buffer, hb)
