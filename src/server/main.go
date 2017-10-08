@@ -227,7 +227,9 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 		if currA == nil {
 			if statusB == ALIVE {
 				log.Printf("Machine %d joined", idB)
+				fmt.Println("CHECK")
 				newNode := NewNode(idB, hbCountB, timestampB, statusB)
+				fmt.Println("CHECK2")
 				A.Insert(newNode)
 			}
 		} else {
