@@ -110,7 +110,7 @@ func (m *MembersList) Remove(id int) {
 
 func (m *MembersList) Next(n *Node) *Node {
 	m.mu.Lock()
-	next := n.Right
+	next := n.Left
 	m.mu.Unlock()
 	return next
 }
