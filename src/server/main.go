@@ -55,7 +55,7 @@ func main() {
 			go Leave() //TODO: might need to use thread
 		} else if(strings.Contains(text, "list")) {
 			if(memberList.Size() == 0){
-				fmt.Print("No members\n")
+				fmt.Print("Not joined\n")
 			} else {
 				list := memberList.Read()
 				fmt.Println(list)
@@ -123,6 +123,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 							failedNode.SetStatus(FAILED)
 							failedNode.IncrementHBCounter()
 							go Cleanup(failedId)
+							conn.SetReadDeadline(time.Now().Add(detectionTime))
 							continue
 						} else {
 							continue
