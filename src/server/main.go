@@ -300,14 +300,17 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 				if receiverId == 0 {
 					continue
 				}
-				receiverAddr := getAddress(receiverId, port)
+				receiverNode := memberList.GetNode(receiverId)
+				if receiverNode != nil && receiverNode.GetStatus() == ALIVE {
+					receiverAddr := getAddress(receiverId, port)
 
-				//increment heartbeat counter for node sending hb
-				currNode.IncrementHBCounter()
+					//increment heartbeat counter for node sending hb
+					currNode.IncrementHBCounter()
 
-				hb := ConstructPBHeartbeat()
-				log.Println(id, " gossip to ", receiverAddr)
-				SendOnce(hb, receiverAddr)
+					hb := ConstructPBHeartbeat()
+					log.Println(id, " gossip to ", receiverAddr)
+					SendOnce(hb, receiverAddr)
+				}
 			}
 		}
 }
