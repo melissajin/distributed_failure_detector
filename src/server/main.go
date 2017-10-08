@@ -222,6 +222,7 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 				log.Printf("Machine %d joined", idB)
 				newNode := NewNode(idB, hbCountB, timestampB, statusB)
 				A.Insert(newNode)
+				fmt.Println(newNode, newNode.Right, newNode.Left)
 			}
 		} else {
 			hbCountA := currA.GetHBCount()
