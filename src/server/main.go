@@ -206,7 +206,7 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 		recievedMemList.Insert(newNode)
 	}
 
-	if status == JOIN {
+	if status == UPDATE {
 		memberList = MergeLists(memberList, recievedMemList)
 	} else {
 		memberList = MergeLists(recievedMemList, memberList)
@@ -430,7 +430,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				}
 
 				receivedMembershipList := hb.GetMachine()
-				UpdateMembershipLists(receivedMembershipList, JOIN)
+				UpdateMembershipLists(receivedMembershipList, UPDATE)
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
 				newMachineAddr := getAddress(receivedMachineId, 8000+id)
@@ -487,7 +487,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	}
 
 	//merge membership lists
-	UpdateMembershipLists(hb.Machine, UPDATE)
+	UpdateMembershipLists(hb.Machine, JOIN)
 }
 
 func getNeighbor(num int, currNode *Node) int {
