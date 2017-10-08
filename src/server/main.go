@@ -27,7 +27,7 @@ const (
 	cleanupTime = time.Second * 6
 	detectionTime = time.Second * 4
 	startupTime = time.Second * 1
-	heartbeatInterval = time.Millisecond * 500
+	heartbeatInterval = time.Millisecond * 200
 )
 
 const (
@@ -182,7 +182,7 @@ func Cleanup(id int) {
 		log.Println("Reset membership list")
 	} else {
 		memberList.Remove(id)
-		log.Println("Machine %d left", id)
+		log.Printf("Remove %d from list", id)
 	}
 }
 
@@ -395,7 +395,6 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 
 			default:
 				buffer := make([]byte, 1024)
-				log.Println("BEFORE DEADLINE: ", time.Now())
 				conn.SetReadDeadline(time.Now().Add(detectionTime))
 				_ , _, err = conn.ReadFrom(buffer)
 				if err != nil {
@@ -411,7 +410,6 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				if err != nil {
 					log.Fatal("Unmarshal error:", err)
 				}
-				log.Println("AFTER DEADLINE: ", time.Now())
 				receivedMembershipList := hb.GetMachine()
 				UpdateMembershipLists(receivedMembershipList)
 				entryHB := ConstructPBHeartbeat()
