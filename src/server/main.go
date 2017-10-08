@@ -206,13 +206,14 @@ func UpdateMembershipLists(receivedList []*pb.Machine, status int) {
 		recievedMemList.Insert(newNode)
 	}
 
-	//if memberList.Size() == 1 && recievedMemList.Size() != 1 {
-	//	memberList = MergeLists(recievedMemList, memberList)
-	//} else {
-	//	memberList = MergeLists(memberList, recievedMemList)
-	//}
+	if memberList.Size() == 1 && recievedMemList.Size() != 1 {
+		fmt.Println("CHECKA")
+		memberList = MergeLists(recievedMemList, memberList)
+	} else {
+		fmt.Println("CHECKB")
+		memberList = MergeLists(memberList, recievedMemList)
+	}
 
-	memberList = MergeLists(memberList, recievedMemList)
 	/*if status == 1 {
 		memberList = MergeLists(memberList, recievedMemList)
 	} else {
