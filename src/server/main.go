@@ -360,12 +360,13 @@ func Join() {
 	memberList.Insert(node)
 
 	// Get membership list from one entry machine
-	//var wg1 sync.WaitGroup
-	//wg1.Add(5)
+	var wg1 sync.WaitGroup
+	wg1.Add(5)
 	for i := 0; i < len(entryMachineIds); i++ {
-		go GetCurrentMembers(entryMachineIds[i])//, &wg1)
+		go GetCurrentMembers(entryMachineIds[i], &wg1)
 	}
-	//wg1.Wait()
+	wg1.Wait()
+
 	// start 4 threads to listen and 4 threads to gossip
 	var wg2 sync.WaitGroup
 	wg2.Add(8)
@@ -435,8 +436,8 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 
 }
 
-func GetCurrentMembers(entryId int) {//, wg *sync.WaitGroup) {
-	//defer wg.Done()
+func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	_, id := GetIdentity()
 	if id == entryId {
