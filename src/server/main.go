@@ -130,14 +130,13 @@ func Listen(port int, wg *sync.WaitGroup) {
 
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
-		fmt.Println("ERROR: ", err, conn)
+		log.Fatal("Error listening: ", err)
 	}
 
 	ListenLoop:
 		for {
 			select {
 			case <- leave:
-				log.Println("Break out of listen for port: ", port)
 				break ListenLoop
 			default:
 				buffer := make([]byte, 1024)
@@ -157,7 +156,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 					_ , _, err = conn.ReadFrom(buffer)
 					// Timeout error, machine failed
 					if err != nil {
-						log.Println("ERROR READING FROM CONNECTION: ", err)
 						if err, ok := err.(net.Error); ok && err.Timeout() {
 							currNode := memberList.GetNode(id)
 							if currNode == nil {
@@ -172,7 +170,6 @@ func Listen(port int, wg *sync.WaitGroup) {
 							failedNode.SetStatus(FAILED)
 							failedNode.IncrementHBCounter()
 							hb := ConstructPBHeartbeat()
-							log.Println("Send FAILED hb to", failedId)
 							SendOnce(hb, getAddress(failedId, port))
 							go Cleanup(failedId)
 							conn.SetReadDeadline(time.Now().Add(DETECTION_TIME))
@@ -336,7 +333,6 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 			for(memberList.Size() < 2) {}
 			select {
 			case <- leave:
-				log.Println("Break out of gossip for port: ", port)
 				break GossipLoop
 			default:
 				//send heartbeat after certain duration
@@ -438,8 +434,6 @@ func Join() {
 		go SetupEntryPort(&wg2)
 	}
 	wg2.Wait()
-
-	log.Println("Last cleanup")
 	Cleanup(id)
 }
 
@@ -459,7 +453,6 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 		for {
 			select {
 			case <- leave:
-				log.Println("BREAK OUT OF ENTRY LOOP")
 				break EntryLoop
 
 			default:
@@ -489,7 +482,6 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				entryHB := ConstructPBHeartbeat()
 				receivedMachineId := int(hb.GetId())
 				newMachineAddr := getAddress(receivedMachineId, 8000+id)
-				log.Println(id, " send entry hb to ", newMachineAddr)
 				SendOnce(entryHB, newMachineAddr)
 			}
 		}
@@ -537,7 +529,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 	hb := &pb.Heartbeat{}
 	err = proto.Unmarshal(buffer, hb)
 	if err != nil {
-		log.Fatal("Unmarshal2 error:", err)
+		log.Fatal("Unmarshal error:", err)
 	}
 
 	UpdateMembershipLists(hb.Machine)
