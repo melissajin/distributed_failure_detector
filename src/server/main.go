@@ -171,6 +171,8 @@ func Listen(port int, wg *sync.WaitGroup) {
 							failedNode := memberList.GetNode(failedId)
 							failedNode.SetStatus(FAILED)
 							failedNode.IncrementHBCounter()
+							hb := ConstructPBHeartbeat()
+							SendOnce(hb, getAddress(failedId, port))
 							go Cleanup(failedId)
 							conn.SetReadDeadline(time.Now().Add(DETECTION_TIME))
 							continue
