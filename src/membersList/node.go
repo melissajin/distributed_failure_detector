@@ -9,6 +9,7 @@ const (
 
 type Node struct {
 	id int
+	ipAddress string
 	hbCounter int
 	timestamp string
 	right *Node
@@ -16,12 +17,16 @@ type Node struct {
 	status int
 }
 
-func NewNode(id int, hbCount int, timestamp string, status int) * Node {
-	return &Node{ id, hbCount, timestamp, nil, nil, status }
+func NewNode(id int, ipAddress string, hbCount int, timestamp string, status int) * Node {
+	return &Node{ id, ipAddress, hbCount, timestamp, nil, nil, status }
 }
 
 func (n *Node) GetId() int {
 	return n.id
+}
+
+func (n *Node) GetIPAddress() string {
+	return n.ipAddress
 }
 
 func (n *Node) GetHBCount() int {

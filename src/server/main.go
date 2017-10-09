@@ -109,9 +109,8 @@ func main() {
 				fmt.Println(list)
 			}
 		} else if(strings.Contains(text, "id")) {
-			_, id := GetIdentity()
-			idStr := strconv.Itoa(id)
-			fmt.Print(idStr + "\n")
+			ip, _ := os.Hostname()
+			fmt.Print(ip + "\n")
 		} else {
 			fmt.Println("Invalid Command. Enter [join/leave/list/id]")
 		}
@@ -219,6 +218,14 @@ func getAddress(machineNum int, portNum int) string {
 	return "fa17-cs425-g46-" + machineStr +".cs.illinois.edu:" + strconv.Itoa(portNum)
 }
 
+func getHost(machineNum int) string {
+	machineStr := strconv.Itoa(machineNum)
+	if(machineNum < 10) {
+		machineStr = "0" + machineStr
+	}
+	return "fa17-cs425-g46-" + machineStr +".cs.illinois.edu"
+}
+
 //Cleanup after clean up period
 func Cleanup(id int) {
 	time.Sleep(CLEANUP_TIME)
@@ -242,9 +249,10 @@ func UpdateMembershipLists(receivedList []*pb.Machine) {
 	for i := 0; i < len(receivedList); i++ {
 		machine := receivedList[i]
 		receivedId := machine.GetId()
+		receivedIp := getHost(int(receivedId.Id))
 		receivedStatus := int(machine.GetStatus())
 		receivedHbCount := int(machine.GetHbCounter())
-		newNode := NewNode(int(receivedId.Id), receivedHbCount, receivedId.Timestamp, receivedStatus)
+		newNode := NewNode(int(receivedId.Id), receivedIp, receivedHbCount, receivedId.Timestamp, receivedStatus)
 		recievedMemList.Insert(newNode)
 	}
 
@@ -264,12 +272,13 @@ func MergeLists(A MembersList, B MembersList) MembersList {
 		currA := A.GetNode(currB.GetId())
 		statusB := currB.GetStatus()
 		idB := currB.GetId()
+		ipAddressB := getHost(idB)
 		hbCountB := currB.GetHBCount()
 		timestampB := currB.GetTimestamp()
 		if currA == nil {
 			if statusB == ALIVE {
 				log.Printf("Machine %d joined", idB)
-				newNode := NewNode(idB, hbCountB, timestampB, statusB)
+				newNode := NewNode(idB, ipAddressB ,hbCountB, timestampB, statusB)
 				A.Insert(newNode)
 			}
 		} else {
@@ -395,10 +404,10 @@ func ConstructPBHeartbeat() *pb.Heartbeat{
 
 func Join() {
 	leave = make(chan bool)
-	_, id := GetIdentity()
+	host , id := GetIdentity()
 
 	// Create node and membership list and entry heartbeat
-	node := NewNode(id, 0, time.Now().String(), ALIVE)
+	node := NewNode(id, host,0, time.Now().String(), ALIVE)
 	memberList.Insert(node)
 
 	// Get membership list from one entry machine
