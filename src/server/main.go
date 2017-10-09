@@ -101,7 +101,9 @@ func main() {
 			go Leave()
 		} else if(strings.Contains(text, "list")) {
 			_, id = GetIdentity()
+			fmt.Println("HERE 1")
 			node := memberList.GetNode(id)
+			fmt.Println("HERE 2")
 			if node == nil || node.GetStatus() != ALIVE {
 				fmt.Print("Not joined\n")
 			} else {
