@@ -25,7 +25,7 @@ var entryMachineIds = []int{1,2,3,4,5}
 
 const (
 	CONNECTIONS = 4
-	CLEANUP_TIME = time.Second * 6
+	CLEANUP_TIME = time.Second * 2
 	DETECTION_TIME = time.Second * 2
 	STARTUP_TIME = time.Second * 1
 	HB_INTERVAL = time.Millisecond * 400
@@ -345,6 +345,9 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 				//send heartbeat after certain duration
 				time.Sleep(HB_INTERVAL)
 
+				if currNode.GetStatus() == FAILED {
+					break GossipLoop
+				}
 				receiverId := memberList.GetNeighbor(port - 8000, currNode, LEFT_DIR)
 				if receiverId == 0 {
 					continue
