@@ -29,7 +29,7 @@ const (
 	DETECTION_TIME = time.Second * 2
 	STARTUP_TIME = time.Second * 1
 	HB_INTERVAL = time.Millisecond * 400
-	MESSAGE_LOSS_RATE = 0
+	MESSAGE_LOSS_RATE = 30
 )
 
 type Counter struct {
