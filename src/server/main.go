@@ -144,8 +144,8 @@ func Listen(port int, wg *sync.WaitGroup) {
 			default:
 				buffer := make([]byte, 1024)
 				currNode := memberList.GetNode(id)
-				if currNode == nil {
-					continue
+				if currNode == nil || currNode.GetStatus() == FAILED{
+					break ListenLoop
 				}
 				neighbor := memberList.GetNeighbor(port-8000, currNode, RIGHT_DIR)
 				// TODO: only set deadline after machine joins
@@ -238,7 +238,6 @@ func Cleanup(id int) {
 
 	if(id == ownId) {
 		// Reset membership list
-		close(leave)
 		memberList = NewMembershipList()
 		log.Println("Reset membership list")
 	} else {
@@ -466,6 +465,11 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 				break EntryLoop
 
 			default:
+				currNode := memberList.GetNode(id)
+				if currNode == nil || currNode.GetStatus() == FAILED {
+					break EntryLoop
+				}
+
 				buffer := make([]byte, 1024)
 				conn.SetReadDeadline(time.Now().Add(DETECTION_TIME))
 				_ , _, err = conn.ReadFrom(buffer)
