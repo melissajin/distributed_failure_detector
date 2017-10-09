@@ -29,7 +29,7 @@ const (
 	DETECTION_TIME = time.Second * 2
 	STARTUP_TIME = time.Second * 1
 	HB_INTERVAL = time.Millisecond * 400
-	MESSAGE_LOSS_RATE = 30
+	MESSAGE_LOSS_RATE = 10
 )
 
 type Counter struct {
@@ -101,9 +101,7 @@ func main() {
 			go Leave()
 		} else if(strings.Contains(text, "list")) {
 			_, id = GetIdentity()
-			fmt.Println("HERE 1")
 			node := memberList.GetNode(id)
-			fmt.Println("HERE 2")
 			if node == nil || node.GetStatus() != ALIVE {
 				fmt.Print("Not joined\n")
 			} else {
