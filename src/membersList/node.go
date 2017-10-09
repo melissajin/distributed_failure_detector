@@ -8,12 +8,12 @@ const (
 )
 
 type Node struct {
-	Id int
-	HbCounter int
-	Timestamp string
-	Right *Node
-	Left *Node
-	Status int
+	id int
+	hbCounter int
+	timestamp string
+	right *Node
+	left *Node
+	status int
 }
 
 func NewNode(id int, hbCount int, timestamp string, status int) * Node {
@@ -21,34 +21,34 @@ func NewNode(id int, hbCount int, timestamp string, status int) * Node {
 }
 
 func (n *Node) GetId() int {
-	return n.Id
+	return n.id
 }
 
 func (n *Node) GetHBCount() int {
-	return n.HbCounter
+	return n.hbCounter
 }
 
 func (n *Node) GetTimestamp() string {
-	return n.Timestamp
+	return n.timestamp
 }
 
 func (n *Node) GetStatus() int {
-	return n.Status
+	return n.status
 }
 
 func (n *Node) IncrementHBCounter() {
-	n.HbCounter++
+	n.hbCounter++
 }
 
 func (n *Node) SetHBCounter(hbCount int) {
-	n.HbCounter = hbCount
+	n.hbCounter = hbCount
 }
 
 func (n *Node) SetNeighbors(right *Node, left *Node) {
-	n.Right = right
-	n.Left = left
+	n.right = right
+	n.left = left
 }
 
 func (n *Node) SetStatus(status int) {
-	n.Status = status
+	n.status = status
 }

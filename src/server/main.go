@@ -24,12 +24,12 @@ var leave chan bool
 var entryMachineIds = []int{1,2,3,4,5}
 
 const (
-	connections = 4
-	cleanupTime = time.Second * 6
-	detectionTime = time.Second * 2
-	startupTime = time.Second * 1
-	heartbeatInterval = time.Millisecond * 400
-	messageLossRate = 3
+	CONNECTIONS = 4
+	CLEANUP_TIME = time.Second * 6
+	DETECTION_TIME = time.Second * 2
+	STARTUP_TIME = time.Second * 1
+	HB_INTERVAL = time.Millisecond * 400
+	MESSAGE_LOSS_RATE = 3
 )
 
 type Counter struct {
@@ -146,7 +146,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 				if currNode == nil {
 					continue
 				}
-				neighbor := memberList.GetNeighbor(port-8000, currNode, RIGHT)
+				neighbor := memberList.GetNeighbor(port-8000, currNode, RIGHT_DIR)
 				// TODO: only set deadline after machine joins
 				if(neighbor != 0) {
 					neighNode := memberList.GetNode(neighbor)
@@ -154,7 +154,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 						continue
 					}
 					
-					conn.SetReadDeadline(time.Now().Add(detectionTime))
+					conn.SetReadDeadline(time.Now().Add(DETECTION_TIME))
 					_ , _, err = conn.ReadFrom(buffer)
 					// Timeout error, machine failed
 					if err != nil {
@@ -164,7 +164,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 							if currNode == nil {
 								continue
 							}
-							failedId := memberList.GetNeighbor(port-8000, currNode, RIGHT)
+							failedId := memberList.GetNeighbor(port-8000, currNode, RIGHT_DIR)
 							if failedId == 0 {
 								continue
 							}
@@ -173,7 +173,7 @@ func Listen(port int, wg *sync.WaitGroup) {
 							failedNode.SetStatus(FAILED)
 							failedNode.IncrementHBCounter()
 							go Cleanup(failedId)
-							conn.SetReadDeadline(time.Now().Add(detectionTime))
+							conn.SetReadDeadline(time.Now().Add(DETECTION_TIME))
 							continue
 						} else {
 							continue
@@ -221,7 +221,7 @@ func getAddress(machineNum int, portNum int) string {
 
 //Cleanup after clean up period
 func Cleanup(id int) {
-	time.Sleep(cleanupTime)
+	time.Sleep(CLEANUP_TIME)
 	_, ownId := GetIdentity()
 
 	if(id == ownId) {
@@ -328,9 +328,9 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 				break GossipLoop
 			default:
 				//send heartbeat after certain duration
-				time.Sleep(heartbeatInterval)
+				time.Sleep(HB_INTERVAL)
 
-				receiverId := memberList.GetNeighbor(port - 8000, currNode, LEFT)
+				receiverId := memberList.GetNeighbor(port - 8000, currNode, LEFT_DIR)
 				if receiverId == 0 {
 					continue
 				}
@@ -345,7 +345,7 @@ func Gossip(port int, id int, wg *sync.WaitGroup) {
 					messagesSent.Add(1)
 					log.Println("GOSSIP: ", id, "send to", receiverId, "on", port, "Total Sent:", messagesSent.x)
 					
-					if simMessageLoss(messageLossRate) == true {
+					if simMessageLoss(MESSAGE_LOSS_RATE) == true {
 						SendOnce(hb, receiverAddr)
 					} else {
 						log.Println("Dropped packet")
@@ -412,7 +412,7 @@ func Join() {
 	// start 4 threads to listen and 4 threads to gossip
 	var wg2 sync.WaitGroup
 	wg2.Add(8)
-	for i := 0; i < connections; i++ {
+	for i := 0; i < CONNECTIONS; i++ {
 		go Listen(8000 + i, &wg2)
 		go Gossip(8000 + i, id, &wg2)
 	}
@@ -449,7 +449,7 @@ func SetupEntryPort(wg *sync.WaitGroup) {
 
 			default:
 				buffer := make([]byte, 1024)
-				conn.SetReadDeadline(time.Now().Add(detectionTime))
+				conn.SetReadDeadline(time.Now().Add(DETECTION_TIME))
 				_ , _, err = conn.ReadFrom(buffer)
 				if err != nil {
 					continue
@@ -505,7 +505,7 @@ func GetCurrentMembers(entryId int, wg *sync.WaitGroup) {
 		return
 	}
 
-	conn.SetReadDeadline(time.Now().Add(startupTime))
+	conn.SetReadDeadline(time.Now().Add(STARTUP_TIME))
 	buffer := make([]byte, 1024)
 	_, _, err = conn.ReadFromUDP(buffer)
 	conn.Close()

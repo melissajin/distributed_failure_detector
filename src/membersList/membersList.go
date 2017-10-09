@@ -6,37 +6,37 @@ import (
 )
 
 const (
-	LEFT = 0
-	RIGHT = 1
+	LEFT_DIR = 0
+	RIGHT_DIR = 1
 )
 
 type MembersList struct {
-	Head *Node
-	NodeMap map[int]*Node // Map of node id to node pointer
+	head *Node
+	nodeMap map[int]*Node // Map of node id to node pointer
 	mu sync.Mutex
 }
 
 
 func NewMembershipList() MembersList{
-	return MembersList{ Head:nil, NodeMap:make(map[int]*Node) }
+	return MembersList{ head:nil, nodeMap:make(map[int]*Node) }
 }
 
 func (m *MembersList) GetHead() *Node {
 	m.mu.Lock()
-	head := m.Head
+	currHead := m.head
 	m.mu.Unlock()
-	return head
+	return currHead
 }
 
 func (m *MembersList) SetHead(newHead *Node) {
 	m.mu.Lock()
-	m.Head = newHead
+	m.head = newHead
 	m.mu.Unlock()
 }
 
 func (m *MembersList) GetNode(id int) *Node {
 	m.mu.Lock()
-	node := m.NodeMap[id]
+	node := m.nodeMap[id]
 	m.mu.Unlock()
 	return node
 }
@@ -45,16 +45,16 @@ func (m *MembersList) Read() [] string {
 	var list []string
 
 	m.mu.Lock()
-	node := m.Head
+	node := m.head
 	for node != nil {
-		if(node.Status == ALIVE) {
-			id := strconv.Itoa(node.Id)
-			ts := node.Timestamp
+		if(node.status == ALIVE) {
+			id := strconv.Itoa(node.id)
+			ts := node.timestamp
 			member := "Machine Id: " + id + " Timestamp: " + ts
 			list = append(list, member)
 		}
-		node = node.Left
-		if node == m.Head {
+		node = node.left
+		if node == m.head {
 			break
 		}
 	}
@@ -65,7 +65,7 @@ func (m *MembersList) Read() [] string {
 
 func (m *MembersList) Size() int {
 	m.mu.Lock()
-	nMap := m.NodeMap
+	nMap := m.nodeMap
 	m.mu.Unlock()
 
 	return len(nMap)
@@ -74,55 +74,55 @@ func (m *MembersList) Size() int {
 func (m *MembersList) Insert(newNode *Node) {
 	id := newNode.GetId()
 	m.mu.Lock()
-	if(m.Head == nil) {
-		m.Head = newNode
-		newNode.Right = m.Head
-		newNode.Left = m.Head
+	if(m.head == nil) {
+		m.head = newNode
+		newNode.right = m.head
+		newNode.left = m.head
 	} else{
-		newNode.Right = m.Head.Right
-		newNode.Left = m.Head
+		newNode.right = m.head.right
+		newNode.left = m.head
 
-		m.Head.Right.Left = newNode
-		m.Head.Right = newNode
+		m.head.right.left = newNode
+		m.head.right = newNode
 	}
-	m.NodeMap[id] = newNode
+	m.nodeMap[id] = newNode
 	m.mu.Unlock()
 }
 
 func (m *MembersList) Remove(id int) {
 	m.mu.Lock()
-	node := m.NodeMap[id]
+	node := m.nodeMap[id]
 	
 	if node != nil {
-		if len(m.NodeMap) == 1 {
-			m.Head = nil
+		if len(m.nodeMap) == 1 {
+			m.head = nil
 		} else {
 			// Choose new head if we remove current head
-			if node == m.Head {
-				m.Head = m.Head.Right
+			if node == m.head {
+				m.head = m.head.right
 			}
 
-			node.Left.Right = node.Right
-			node.Right.Left = node.Left
+			node.left.right = node.right
+			node.right.left = node.left
 		}
-		node.Left = nil
-		node.Right = nil
+		node.left = nil
+		node.right = nil
 
-		delete(m.NodeMap, id)
+		delete(m.nodeMap, id)
 	}
 	m.mu.Unlock()
 }
 
 func (m *MembersList) Left(n *Node) *Node {
 	m.mu.Lock()
-	next := n.Left
+	next := n.left
 	m.mu.Unlock()
 	return next
 }
 
 func (m *MembersList) Right(n *Node) *Node {
 	m.mu.Lock()
-	next := n.Right
+	next := n.right
 	m.mu.Unlock()
 	return next
 }
@@ -130,11 +130,11 @@ func (m *MembersList) Right(n *Node) *Node {
 func (m *MembersList) GetNeighbor(num int, currNode *Node, direction int) int {
 	m.mu.Lock()
 	neighbor := currNode
-	if direction == RIGHT {
+	if direction == RIGHT_DIR {
 		for i := -1; i < num; i++ {
-			neighbor = neighbor.Right
-			for neighbor.GetStatus() != ALIVE {
-				neighbor = neighbor.Right
+			neighbor = neighbor.right
+			for neighbor.status != ALIVE {
+				neighbor = neighbor.right
 			}
 			if neighbor == currNode {
 				m.mu.Unlock()
@@ -143,9 +143,9 @@ func (m *MembersList) GetNeighbor(num int, currNode *Node, direction int) int {
 		}
 	} else {
 		for i := -1; i < num; i++ {
-			neighbor = neighbor.Left
-			for neighbor.GetStatus() != ALIVE {
-				neighbor = neighbor.Left
+			neighbor = neighbor.left
+			for neighbor.status != ALIVE {
+				neighbor = neighbor.left
 			}
 			if neighbor == currNode {
 				m.mu.Unlock()
@@ -154,5 +154,5 @@ func (m *MembersList) GetNeighbor(num int, currNode *Node, direction int) int {
 		}
 	}
 	m.mu.Unlock()
-	return neighbor.Id
+	return neighbor.id
 }
