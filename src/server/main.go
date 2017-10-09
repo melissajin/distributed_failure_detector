@@ -238,6 +238,7 @@ func Cleanup(id int) {
 
 	if(id == ownId) {
 		// Reset membership list
+		close(leave)
 		memberList = NewMembershipList()
 		log.Println("Reset membership list")
 	} else {
