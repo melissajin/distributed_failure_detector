@@ -2,7 +2,6 @@ package membersList
 
 import (
 	"sync"
-	"strconv"
 )
 
 const (
@@ -48,9 +47,7 @@ func (m *MembersList) Read() [] string {
 	node := m.head
 	for node != nil {
 		if(node.status == ALIVE) {
-			id := strconv.Itoa(node.id)
-			ts := node.timestamp
-			member := "Machine Id: " + id + " Timestamp: " + ts
+			member := "Machine Id: " + node.ipAddress
 			list = append(list, member)
 		}
 		node = node.left
